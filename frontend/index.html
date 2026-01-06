@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Reports • Система анализа отчетов</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1a2234;
+            --bg-elevated: #1e293b;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-tertiary: #94a3b8;
+            
+            --accent-primary: #3b82f6;
+            --accent-secondary: #06b6d4;
+            --accent-tertiary: #8b5cf6;
+            
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            
+            --border: rgba(148, 163, 184, 0.1);
+            --border-hover: rgba(148, 163, 184, 0.2);
+            
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            --gradient-accent: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-surface: linear-gradient(135deg, #1e293b 0%, #1a2234 100%);
+            
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2rem;
+            --space-xl: 3rem;
+            
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            --shadow-glow: 0 0 30px rgba(59, 130, 246, 0.3);
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-xl) var(--space-lg);
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: var(--shadow-glow);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        h1 {
+            font-family: 'Sora', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-xs);
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+        }
+
+        .report-card {
+            background: var(--gradient-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .report-card:nth-child(1) { animation-delay: 0.1s; }
+        .report-card:nth-child(2) { animation-delay: 0.2s; }
+        .report-card:nth-child(3) { animation-delay: 0.3s; }
+        .report-card:nth-child(4) { animation-delay: 0.4s; }
+        .report-card:nth-child(5) { animation-delay: 0.5s; }
+        .report-card:nth-child(6) { animation-delay: 0.6s; }
+
+        .report-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .report-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .report-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .report-card.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .report-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-sm);
+            display: block;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+        }
+
+        .report-card-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--space-xs);
+            color: var(--text-primary);
+        }
+
+        .report-card-desc {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            line-height: 1.5;
+        }
+
+        .upload-section {
+            background: var(--bg-elevated);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            text-align: center;
+            transition: all 0.3s ease;
+            margin-bottom: var(--space-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-section.dragover {
+            border-color: var(--accent-primary);
+            background: rgba(59, 130, 246, 0.05);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto var(--space-md);
+            box-shadow: var(--shadow-glow);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .upload-section h3 {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: var(--space-sm);
+        }
+
+        .upload-section p {
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-md);
+        }
+
+        .upload-btn {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            box-shadow: var(--shadow-md);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .upload-btn:active {
+            transform: translateY(0);
+        }
+
+        .period-btn {
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .period-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .period-btn.active {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: transparent;
+        }
+
+        .schedule-item {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-xs);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .schedule-item:hover {
+            border-color: var(--border-hover);
+        }
+
+        .schedule-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-sm) var(--space-md);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .schedule-header:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .schedule-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            flex: 1;
+        }
+
+        .schedule-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .schedule-toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        .schedule-toggle .arrow {
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .schedule-item.open .schedule-toggle .arrow {
+            transform: rotate(180deg);
+        }
+
+        .schedule-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: var(--bg-tertiary);
+        }
+
+        .schedule-item.open .schedule-details {
+            max-height: 500px;
+        }
+
+        .schedule-details-inner {
+            padding: var(--space-sm) var(--space-md);
+            border-top: 1px solid var(--border);
+        }
+
+        .schedule-occurrence {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-xs) 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .schedule-occurrence:not(:last-child) {
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .schedule-day {
+            min-width: 100px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .schedule-time {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-secondary);
+        }
+
+        .schedule-item.topic-invalid {
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .schedule-item.topic-invalid:hover {
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .schedule-item.topic-valid {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .schedule-item.topic-valid:hover {
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            gap: var(--space-xs);
+            margin-bottom: var(--space-lg);
+            background: var(--bg-secondary);
+            padding: var(--space-xs);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+        }
+
+        .tab {
+            background: transparent;
+            border: none;
+            color: var(--text-tertiary);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+        }
+
+        .tab.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .result-panel {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .result-meta {
+            display: flex;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        .meta-badge {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .stat-card {
+            background: var(--gradient-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-xs);
+        }
+
+        .stat-value {
+            font-family: 'Sora', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.9375rem;
+        }
+
+        thead th {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: var(--space-md);
+            text-align: left;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        thead th:first-child {
+            border-top-left-radius: var(--radius-md);
+        }
+
+        thead th:last-child {
+            border-top-right-radius: var(--radius-md);
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        tbody td {
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr:last-child td:first-child {
+            border-bottom-left-radius: var(--radius-md);
+        }
+
+        tbody tr:last-child td:last-child {
+            border-bottom-right-radius: var(--radius-md);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 0.8125rem;
+            white-space: nowrap;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .badge-info {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-primary);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin: var(--space-md) 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-sm);
+            transition: width 0.5s ease;
+            animation: shimmer 2s infinite;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: var(--space-lg);
+            right: var(--space-lg);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md) var(--space-lg);
+            box-shadow: var(--shadow-xl);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            min-width: 300px;
+            animation: slideInRight 0.4s ease-out;
+            z-index: 1000;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--space-xl);
+            color: var(--text-tertiary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-md);
+            opacity: 0.5;
+        }
+
+        .history-item {
+            background: var(--gradient-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            margin-bottom: var(--space-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            border-color: var(--border-hover);
+            transform: translateX(4px);
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .history-meta {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            display: flex;
+            gap: var(--space-md);
+        }
+
+        .history-actions {
+            display: flex;
+            gap: var(--space-xs);
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border-hover);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-hover);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: var(--shadow-glow);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: var(--space-lg) var(--space-sm);
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .toast {
+                right: var(--space-sm);
+                left: var(--space-sm);
+                min-width: auto;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: var(--space-xl) 0;
+        }
+
+        code, .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875em;
+            background: var(--bg-secondary);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+            </div>
+            <h1>Academic Reports</h1>
+            <p class="subtitle">Система интеллектуального анализа академических отчетов</p>
+        </header>
+
+        <div class="reports-grid" id="reports-grid">
+            <div class="report-card" data-type="schedule">
+                <span class="report-card-icon">📅</span>
+                <h3 class="report-card-title">Расписание групп</h3>
+                <p class="report-card-desc">Автоматический подсчет пар по дисциплинам с поддержкой диапазонов</p>
+            </div>
+            <div class="report-card" data-type="topics">
+                <span class="report-card-icon">📚</span>
+                <h3 class="report-card-title">Темы занятий</h3>
+                <p class="report-card-desc">Проверка корректности формата записи тем уроков</p>
+            </div>
+            <div class="report-card" data-type="students">
+                <span class="report-card-icon">👥</span>
+                <h3 class="report-card-title">Отчет по студентам</h3>
+                <p class="report-card-desc">Анализ успеваемости и выявление проблемных моментов</p>
+            </div>
+            <div class="report-card" data-type="attendance">
+                <span class="report-card-icon">✓</span>
+                <h3 class="report-card-title">Посещаемость</h3>
+                <p class="report-card-desc">Контроль посещаемости преподавателей</p>
+            </div>
+            <div class="report-card" data-type="homework">
+                <span class="report-card-icon">✎</span>
+                <h3 class="report-card-title">Проверка ДЗ</h3>
+                <p class="report-card-desc">Мониторинг проверки домашних заданий</p>
+            </div>
+            <div class="report-card" data-type="student_homework">
+                <span class="report-card-icon">📝</span>
+                <h3 class="report-card-title">Сданные ДЗ студентами</h3>
+                <p class="report-card-desc">Отслеживание выполнения заданий студентами</p>
+            </div>
+        </div>
+
+        <div class="upload-section" id="upload-section">
+            <div class="upload-icon">📤</div>
+            <h3>Загрузите файл отчета</h3>
+            <p>Перетащите .xls или .xlsx файл сюда или выберите файл</p>
+            <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+                <span>📁</span>
+                Выбрать файл
+            </button>
+            <input type="file" id="file-input" accept=".xls,.xlsx">
+        </div>
+
+        <div class="period-selector hidden" id="period-selector" style="margin-bottom: var(--space-lg); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+            <h4 style="margin-bottom: var(--space-sm); color: var(--text-secondary);">Выберите период:</h4>
+            <div style="display: flex; gap: var(--space-sm);">
+                <button class="period-btn active" data-period="month">📅 За месяц</button>
+                <button class="period-btn" data-period="week">📆 За неделю</button>
+                <button class="period-btn" data-period="day">🗓️ За день</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="result" id="result-tab">Результат</button>
+            <button class="tab" data-tab="history" id="history-tab">История</button>
+        </div>
+
+        <div class="result-panel" id="result-content">
+            <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <p>Выберите тип отчета и загрузите файл для начала анализа</p>
+            </div>
+        </div>
+
+        <div class="result-panel hidden" id="history-content">
+            <div class="result-header">
+                <h2 class="result-title">История отчетов</h2>
+            </div>
+            <div id="history-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        let selectedReportType = null;
+        let selectedPeriod = 'month';
+        let currentReport = null;
+
+        document.querySelectorAll('.report-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.report-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                selectedReportType = card.dataset.type;
+
+                const periodSelector = document.getElementById('period-selector');
+                if (selectedReportType === 'homework') {
+                    periodSelector.classList.remove('hidden');
+                } else {
+                    periodSelector.classList.add('hidden');
+                }
+            });
+        });
+
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedPeriod = btn.dataset.period;
+            });
+        });
+
+        const fileInput = document.getElementById('file-input');
+        const uploadSection = document.getElementById('upload-section');
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        async function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                await handleFile(file);
+            }
+        }
+
+        async function handleFile(file) {
+            if (!selectedReportType) {
+                showToast('Сначала выберите тип отчета', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('report_type', selectedReportType);
+            formData.append('period', selectedPeriod);
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`${API_URL}/reports/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentReport = data;
+                    displayResult(data);
+                    showToast('Отчет успешно обработан', 'success');
+                    loadHistory();
+                } else {
+                    showToast(data.detail || 'Ошибка обработки файла', 'error');
+                }
+            } catch (error) {
+                showToast('Ошибка подключения к серверу', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayResult(data) {
+            const resultContent = document.getElementById('result-content');
+            const result = data.result;
+
+            let html = `
+                <div class="result-header">
+                    <h2 class="result-title">${result.title || 'Результат анализа'}</h2>
+                    <div class="result-meta">
+                        <div class="meta-item">
+                            <span>📄</span>
+                            <span>${data.filename}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>🕐</span>
+                            <span>${new Date(data.timestamp).toLocaleString('ru-RU')}</span>
+                        </div>
+                        <span class="meta-badge">${getReportTypeLabel(data.report_type)}</span>
+                    </div>
+                </div>
+            `;
+
+            if (result.description) {
+                html += `<p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">${result.description}</p>`;
+            }
+
+            if (result.stats) {
+                html += '<div class="stats-grid">';
+                if (result.stats.valid_count !== undefined) {
+                    html += `
+                        <div class="stat-card">
+                            <div class="stat-label">Корректные записи</div>
+                            <div class="stat-value">${result.stats.valid_count}</div>
+                        </div>
+                    `;
+                }
+                if (result.stats.invalid_count !== undefined) {
+                    html += `
+                        <div class="stat-card">
+                            <div class="stat-label">Проблемные записи</div>
+                            <div class="stat-value" style="background: var(--gradient-accent);">${result.stats.invalid_count}</div>
+                        </div>
+                    `;
+                }
+                if (result.total_pairs !== undefined) {
+                    html += `
+                        <div class="stat-card">
+                            <div class="stat-label">Всего пар</div>
+                            <div class="stat-value">${result.total_pairs}</div>
+                        </div>
+                    `;
+                }
+                if (result.groups && result.groups.length > 0) {
+                    html += `
+                        <div class="stat-card">
+                            <div class="stat-label">Групп</div>
+                            <div class="stat-value" style="background: var(--gradient-accent);">${result.groups.length}</div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+            }
+
+            if (data.report_type === 'schedule' && !result.stats && result.groups) {
+                html += '<div class="stats-grid">';
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-label">Всего пар</div>
+                        <div class="stat-value">${result.total_pairs}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Групп</div>
+                        <div class="stat-value" style="background: var(--gradient-accent);">${result.groups.length}</div>
+                    </div>
+                `;
+                html += '</div>';
+            }
+
+            if (data.report_type === 'schedule' && result.groups) {
+                html += renderScheduleTable(result.groups);
+            } else if (data.report_type === 'topics') {
+                if (result.invalid && result.invalid.length > 0) {
+                    html += renderTopicsTable(result.invalid, true);
+                }
+                if (result.valid && result.valid.length > 0) {
+                    html += renderTopicsTable(result.valid, false);
+                }
+            } else if (data.report_type === 'students' && result.students) {
+                html += renderStudentsTable(result.students);
+            } else if (data.report_type === 'attendance' && result.teachers) {
+                html += renderTeachersTable(result.teachers, 'attendance');
+            } else if (data.report_type === 'homework' && result.teachers) {
+                html += renderTeachersTable(result.teachers, 'homework');
+            } else if (data.report_type === 'student_homework' && result.students) {
+                html += renderStudentHomeworkTable(result.students);
+            }
+
+            resultContent.innerHTML = html;
+            switchTab('result');
+        }
+
+        function renderScheduleTable(groups) {
+            return groups.map(group => `
+                <div style="margin-bottom: var(--space-lg);">
+                    <h3 style="margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);">
+                        📚 ${group.name}
+                        <span class="badge badge-info">${group.total} пар</span>
+                    </h3>
+                    <div class="schedule-list">
+                        ${group.disciplines.map((d, idx) => `
+                            <div class="schedule-item" data-id="${group.name}-${idx}">
+                                <div class="schedule-header" onclick="toggleScheduleItem(this)">
+                                    <div class="schedule-info">
+                                        <span class="schedule-name">${d.name}</span>
+                                    </div>
+                                    <div class="schedule-toggle">
+                                        <span class="badge badge-info">${d.count}</span>
+                                        <span class="arrow">▼</span>
+                                    </div>
+                                </div>
+                                <div class="schedule-details">
+                                    <div class="schedule-details-inner">
+                                        ${d.occurrences.map(o => `
+                                            <div class="schedule-occurrence">
+                                                <span class="schedule-day">${o.day}</span>
+                                                <span class="schedule-time">${o.time}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleScheduleItem(header) {
+            const item = header.closest('.schedule-item');
+            item.classList.toggle('open');
+        }
+
+        function renderTopicsTable(data, isInvalid) {
+            const title = isInvalid ? '❌ Записи с проблемами' : '✅ Корректные записи';
+            const badgeClass = isInvalid ? 'badge-danger' : 'badge-success';
+            const itemClass = isInvalid ? 'topic-invalid' : 'topic-valid';
+
+            return `
+                <div style="margin-top: var(--space-lg);">
+                    <h3 style="margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);">
+                        ${title}
+                        <span class="badge ${badgeClass}">${data.reduce((sum, item) => sum + item.count, 0)}</span>
+                        <span style="color: var(--text-tertiary); font-size: 0.9rem; font-weight: normal;">(${data.length} уник.)</span>
+                    </h3>
+                    <div class="schedule-list">
+                        ${data.map((item, idx) => `
+                            <div class="schedule-item ${itemClass}" data-id="topic-${isInvalid ? 'inv' : 'val'}-${idx}">
+                                <div class="schedule-header" onclick="toggleScheduleItem(this)">
+                                    <div class="schedule-info" style="flex: 1; min-width: 0;">
+                                        <span class="schedule-name" style="word-break: break-word;">${item.text}</span>
+                                    </div>
+                                    <div class="schedule-toggle">
+                                        <span class="badge ${badgeClass}">${item.count}</span>
+                                        <span class="arrow">▼</span>
+                                    </div>
+                                </div>
+                                <div class="schedule-details">
+                                    <div class="schedule-details-inner">
+                                        ${isInvalid ? `<div style="color: var(--danger); margin-bottom: var(--space-sm); font-size: 0.85rem;">⚠️ ${item.reason}</div>` : ''}
+                                        ${item.occurrences.map(o => `
+                                            <div class="schedule-occurrence">
+                                                <span class="schedule-day">Строка ${o.row}</span>
+                                                <span class="schedule-time">${o.column}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStudentsTable(students) {
+            return `
+                <div style="border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ФИО студента</th>
+                                <th style="text-align: center;">Оценка ДЗ</th>
+                                <th style="text-align: center;">Классная работа</th>
+                                <th>Проблемы</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${students.map(s => `
+                                <tr>
+                                    <td>${s.name}</td>
+                                    <td style="text-align: center;">
+                                        ${s.hw_grade !== null ? `<span class="badge ${s.hw_grade === 1 ? 'badge-danger' : 'badge-info'}">${s.hw_grade}</span>` : '—'}
+                                    </td>
+                                    <td style="text-align: center;">
+                                        ${s.class_grade !== null ? `<span class="badge ${s.class_grade < 3 ? 'badge-danger' : 'badge-info'}">${s.class_grade}</span>` : '—'}
+                                    </td>
+                                    <td>${s.issues.map(i => `<span class="badge badge-danger">${i}</span>`).join(' ')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderTeachersTable(teachers, type) {
+            const metric = type === 'attendance' ? 'attendance' : 'check_percent';
+            const label = type === 'attendance' ? 'Посещаемость' : 'Процент проверки';
+            const showHomeworkDetails = type === 'homework';
+
+            return `
+                <div style="border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ФИО преподавателя</th>
+                                ${showHomeworkDetails ? '<th style="text-align: center; width: 150px;">Выдано/Проверено</th>' : ''}
+                                <th style="text-align: right; width: 200px;">${label}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${teachers.map(t => `
+                                <tr>
+                                    <td>${t.name}</td>
+                                    ${showHomeworkDetails ? `<td style="text-align: center;"><code>${t.issued || '—'}/${t.checked || '—'}</code></td>` : ''}
+                                    <td style="text-align: right;">
+                                        <span class="badge badge-warning">${t[metric].toFixed(1)}%</span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderStudentHomeworkTable(students) {
+            return `
+                <div style="border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ФИО студента</th>
+                                <th style="text-align: center;">% выполнения ДЗ</th>
+                                <th style="text-align: center;">Оценка за ДЗ</th>
+                                <th style="text-align: center;">Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${students.map(s => `
+                                <tr>
+                                    <td>${s.name}</td>
+                                    <td style="text-align: center;">
+                                        <span class="badge ${s.completion_percent < 50 ? 'badge-danger' : 'badge-warning'}">${s.completion_percent.toFixed(1)}%</span>
+                                    </td>
+                                    <td style="text-align: center;"><code>${s.hw_grade}</code></td>
+                                    <td style="text-align: center;">
+                                        <span class="badge ${s.status === 'критично' ? 'badge-danger' : 'badge-warning'}">${s.status}</span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function getReportTypeLabel(type) {
+            const labels = {
+                schedule: 'Расписание',
+                topics: 'Темы занятий',
+                students: 'Студенты',
+                attendance: 'Посещаемость',
+                homework: 'Проверка ДЗ',
+                student_homework: 'Сданные ДЗ'
+            };
+            return labels[type] || type;
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchTab(tab.dataset.tab);
+            });
+        });
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            document.getElementById('result-content').classList.toggle('hidden', tabName !== 'result');
+            document.getElementById('history-content').classList.toggle('hidden', tabName !== 'history');
+
+            if (tabName === 'history') {
+                loadHistory();
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const response = await fetch(`${API_URL}/reports/history`);
+                const data = await response.json();
+
+                const historyList = document.getElementById('history-list');
+                
+                if (data.history && data.history.length > 0) {
+                    historyList.innerHTML = data.history.map(report => `
+                        <div class="history-item" onclick="viewReport('${report.id}')">
+                            <div class="history-info">
+                                <div class="history-title">${report.result?.title || getReportTypeLabel(report.report_type)}</div>
+                                <div class="history-meta">
+                                    <span>📄 ${report.filename}</span>
+                                    <span>🕐 ${new Date(report.timestamp).toLocaleString('ru-RU')}</span>
+                                </div>
+                            </div>
+                            <div class="history-actions">
+                                <button class="btn-icon" onclick="event.stopPropagation(); deleteReport('${report.id}')" title="Удалить">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    historyList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>История пуста</p></div>';
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        async function viewReport(id) {
+            try {
+                const response = await fetch(`${API_URL}/reports/${id}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentReport = data;
+                    displayResult(data);
+                }
+            } catch (error) {
+                showToast('Ошибка загрузки отчета', 'error');
+            }
+        }
+
+        async function deleteReport(id) {
+            if (!confirm('Удалить этот отчет?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/reports/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showToast('Отчет удален', 'success');
+                    loadHistory();
+                }
+            } catch (error) {
+                showToast('Ошибка удаления', 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.4s ease-out reverse';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            const resultContent = document.getElementById('result-content');
+            if (show) {
+                resultContent.innerHTML = `
+                    <div class="empty-state">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <span>Обработка файла...</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 70%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+        });
+    </script>
+</body>
+</html>
