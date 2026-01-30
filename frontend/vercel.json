@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://YOUR-RENDER-APP.onrender.com/api/$1"
+      "destination": "https://college-reports-api.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",
