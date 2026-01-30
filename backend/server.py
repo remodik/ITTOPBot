@@ -2,27 +2,91 @@ import io
 import logging
 import os
 import re
+import secrets
+import time
 import uuid
+from collections import defaultdict
 from contextlib import suppress
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
+from enum import StrEnum
 
 import pandas as pd
 from dotenv import load_dotenv
-from fastapi import FastAPI, APIRouter, File, UploadFile, Form, HTTPException
-from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic import BaseModel, Field, ConfigDict
+from fastapi import FastAPI, APIRouter, File, UploadFile, Form, HTTPException, Depends, status, Request
+from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
+
+from database import db
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
 
-app = FastAPI()
+SECRET_KEY = os.environ.get('JWT_SECRET_KEY', secrets.token_urlsafe(32))
+CSRF_SECRET = os.environ.get('CSRF_SECRET_KEY', secrets.token_urlsafe(32))
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+security = HTTPBearer()
+
+
+class Role(StrEnum):
+    ADMIN = "admin"
+    MODERATOR = "moderator"
+    USER = "user"
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        return response
+
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, requests_per_minute: int = 60):
+        super().__init__(app)
+        self.requests_per_minute = requests_per_minute
+        self.requests = defaultdict(list)
+    
+    async def dispatch(self, request: Request, call_next):
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        minute_ago = now - 60
+
+        self.requests[client_ip] = [t for t in self.requests[client_ip] if t > minute_ago]
+
+        if len(self.requests[client_ip]) >= self.requests_per_minute:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Слишком много запросов. Попробуйте позже."}
+            )
+        
+        self.requests[client_ip].append(now)
+        response = await call_next(request)
+        return response
+
+
+app = FastAPI(
+    title="Academic Reports API",
+    description="API для обработки академических отчетов",
+    version="2.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc"
+)
 
 api_router = APIRouter(prefix="/api")
 
@@ -33,6 +97,61 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class UserRole(BaseModel):
+    role: Role
+    can_create_users: bool = True
+    can_delete_users: bool = False
+    requires_approval_for_delete: bool = True
+
+
+class User(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: EmailStr
+    hashed_password: str
+    role: Role = Role.MODERATOR
+    is_superadmin: bool = False
+    can_delete_without_approval: bool = False
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_by: str | None = None
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    role: Role = Role.MODERATOR
+    can_delete_without_approval: bool = False
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: EmailStr
+    role: Role
+    is_superadmin: bool
+    can_delete_without_approval: bool
+    created_at: str
+    created_by: str | None = None
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserResponse
+
+
+class DeleteRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    requested_by: str
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    status: str = "pending"
+
+
 class ReportResult(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -40,6 +159,8 @@ class ReportResult(BaseModel):
     filename: str
     result: Any
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_by: str | None = None
+    created_by_email: EmailStr | None = None
 
 
 class ReportHistoryItem(BaseModel):
@@ -48,16 +169,80 @@ class ReportHistoryItem(BaseModel):
     filename: str
     timestamp: str
     summary: str
+    created_by: str | None = None
+    created_by_email: EmailStr | None = None
 
 
 REPORT_LABELS = {
-    "schedule": "Расписание групп",
-    "topics": "Темы занятий",
-    "students": "Отчет по студентам",
-    "attendance": "Посещаемость по преподавателям",
-    "homework": "Проверка домашних заданий",
-    "student_homework": "Сданные ДЗ студентами"
+    "schedule": "Расписание: кол-во пар по дисциплинам",
+    "topics": "Темы занятий: проверка формата",
+    "students": "Студенты: ДЗ=1 или кл.работа<3",
+    "attendance": "Посещаемость: преподаватели <40%",
+    "homework": "Проверка ДЗ: преподаватели <70%",
+    "student_homework": "Сдача ДЗ: студенты <70%"
 }
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def require_role(user: User, *roles: Role) -> None:
+    if user.role not in roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Недостаточно прав. Требуется роль: {', '.join(r.value for r in roles)}"
+        )
+
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Неверные учетные данные",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = db.get_user_by_id(user_id)
+    if user is None:
+        raise credentials_exception
+    user["hashed_password"] = user.pop("password", "")
+    return User(**user)
+
+
+async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав. Требуется роль администратора"
+        )
+    return current_user
+
+
+def generate_password(length: int = 12) -> str:
+    return secrets.token_urlsafe(length)[:length]
 
 
 def process_schedule(df: pd.DataFrame) -> dict:
@@ -155,8 +340,8 @@ def process_schedule(df: pd.DataFrame) -> dict:
             if d["occurrences"]:
                 first = d["occurrences"][0]
                 day_num = day_order.get(first["day"].lower(), 99)
-                return (day_num, first["time"])
-            return (99, "99:99")
+                return day_num, first["time"]
+            return 99, "99:99"
         
         disciplines_list = sorted(disciplines_list, key=get_first_occurrence_key)
         
@@ -180,16 +365,30 @@ def process_topics(df: pd.DataFrame) -> dict:
         "stats": {"valid_count": 0, "invalid_count": 0}
     }
 
+    logger.info(f"Topics report - Available columns: {list(df.columns)}")
+    logger.info(f"Topics report - DataFrame shape: {df.shape}")
+
     pattern = re.compile(r'Урок\s*№?\s*\d+\.?\s*Тема:?\s*.+', re.IGNORECASE)
+    
+    topic_keywords = [
+        'урок', 'тема', 'занятие', 'лекция', 'практика', 
+        'лабораторная', 'семинар', 'контрольная', 'самостоятельная',
+        'работа', 'задание', 'повторение', 'изучение', 'введение',
+        'основы', 'понятие', 'определение', 'раздел', 'глава'
+    ]
 
     valid_groups = {}
     invalid_groups = {}
+    
+    checked_cells = 0
+    matched_keywords = 0
 
     for col in df.columns:
         for idx, val in enumerate(df[col]):
             if pd.notna(val):
                 val_str = str(val).strip()
                 if val_str and len(val_str) > 3:
+                    checked_cells += 1
                     display_text = val_str[:100] + ("..." if len(val_str) > 100 else "")
                     
                     if pattern.match(val_str):
@@ -200,17 +399,28 @@ def process_topics(df: pd.DataFrame) -> dict:
                             "column": str(col)
                         })
                         result["stats"]["valid_count"] += 1
-                    elif 'урок' in val_str.lower() or 'тема' in val_str.lower():
-                        if display_text not in invalid_groups:
-                            invalid_groups[display_text] = {
-                                "reason": "Неверный формат. Ожидается: 'Урок № _. Тема: _'",
-                                "occurrences": []
-                            }
-                        invalid_groups[display_text]["occurrences"].append({
-                            "row": idx + 2,
-                            "column": str(col)
-                        })
-                        result["stats"]["invalid_count"] += 1
+                        logger.info(f"  Valid topic found at row {idx + 2}: {display_text[:50]}")
+                    else:
+                        val_lower = val_str.lower()
+                        is_topic = any(keyword in val_lower for keyword in topic_keywords)
+                        
+                        if is_topic:
+                            matched_keywords += 1
+                            if display_text not in invalid_groups:
+                                invalid_groups[display_text] = {
+                                    "reason": "Неверный формат. Ожидается: 'Урок № _. Тема: _'",
+                                    "occurrences": []
+                                }
+                            invalid_groups[display_text]["occurrences"].append({
+                                "row": idx + 2,
+                                "column": str(col)
+                            })
+                            result["stats"]["invalid_count"] += 1
+                            logger.info(f"  Invalid topic found at row {idx + 2}: {display_text[:50]}")
+
+    logger.info(f"Topics report - Checked {checked_cells} cells total")
+    logger.info(f"Topics report - Found {matched_keywords} cells with keywords")
+    logger.info(f"Topics report - Valid: {result['stats']['valid_count']}, Invalid: {result['stats']['invalid_count']}")
 
     for text, occurrences in valid_groups.items():
         sorted_occ = sorted(occurrences, key=lambda x: x["row"])
@@ -231,6 +441,8 @@ def process_topics(df: pd.DataFrame) -> dict:
 
     result["valid"] = sorted(result["valid"], key=lambda x: x["occurrences"][0]["row"] if x["occurrences"] else 0)
     result["invalid"] = sorted(result["invalid"], key=lambda x: x["occurrences"][0]["row"] if x["occurrences"] else 0)
+
+    logger.info(f"Topics report - Returning {len(result['valid'])} valid groups and {len(result['invalid'])} invalid groups")
 
     return result
 
@@ -453,6 +665,8 @@ def process_homework(df: pd.DataFrame, period: str = "month") -> dict:
 
         if issued is not None and issued > 0 and checked is not None:
             check_percent = (checked / issued) * 100
+            issued_int = int(issued) if issued is not None else 0
+            checked_int = int(checked) if checked is not None else 0
 
         if check_percent is not None and check_percent < 70:
             result["teachers"].append({
@@ -460,7 +674,8 @@ def process_homework(df: pd.DataFrame, period: str = "month") -> dict:
                 "check_percent": round(check_percent, 1),
                 "issued": int(issued) if issued is not None else "—",
                 "checked": int(checked) if checked is not None else "—",
-                "status": "критично" if check_percent < 50 else "низкий"
+                "status": "критично" if check_percent < 50 else "низкий",
+                "message":  f"Проверено {checked_int} из {issued_int} заданий ({round(check_percent, 1)}%)"
             })
             result["stats"]["total_found"] += 1
 
@@ -497,14 +712,7 @@ def process_student_homework(df: pd.DataFrame) -> dict:
             percent_col = col
             break
 
-    hw_grade_col = None
-    for col in df.columns:
-        col_lower = str(col).lower()
-        if col_lower == 'homework' or col_lower == 'дз' or col_lower == 'домашн':
-            hw_grade_col = col
-            break
-
-    logger.info(f"Found columns - name: {name_col}, percent: {percent_col}, hw_grade: {hw_grade_col}")
+    logger.info(f"Found columns - name: {name_col}, percent: {percent_col}")
 
     for idx, row in df.iterrows():
         student_name = str(row[name_col]) if pd.notna(row[name_col]) else f"Строка {idx + 2}"
@@ -513,7 +721,6 @@ def process_student_homework(df: pd.DataFrame) -> dict:
             continue
 
         completion_percent = None
-        hw_grade = None
 
         if percent_col is not None:
             val = row.get(percent_col)
@@ -523,18 +730,10 @@ def process_student_homework(df: pd.DataFrame) -> dict:
                     if val_str:
                         completion_percent = float(val_str)
 
-        if hw_grade_col is not None:
-            val = row.get(hw_grade_col)
-            if pd.notna(val):
-                with suppress(ValueError, TypeError):
-                    hw_grade = float(val)
-
         if completion_percent is not None and completion_percent < 70:
             result["students"].append({
                 "name": student_name,
-                "completion_percent": round(completion_percent, 1),
-                "hw_grade": hw_grade if hw_grade is not None else "—",
-                "status": "критично" if completion_percent < 50 else "низкий"
+                "completion_percent": round(completion_percent, 1)
             })
             result["stats"]["total_found"] += 1
 
@@ -557,11 +756,224 @@ async def root():
     return {"message": "Academic Reports API"}
 
 
+@api_router.post("/auth/login")
+async def login(user_login: UserLogin):
+    user = db.get_user_by_email(user_login.email)
+
+    if not user or not verify_password(user_login.password, user["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неверный email или пароль"
+        )
+
+    user["hashed_password"] = user.pop("password", "")
+    user_with_defaults = User(**user)
+
+    access_token = create_access_token(data={"sub": user["id"]})
+    user_response = UserResponse(**user_with_defaults.model_dump())
+
+    return Token(access_token=access_token, token_type="bearer", user=user_response)
+
+
+@api_router.get("/auth/me")
+async def get_me(current_user: User = Depends(get_current_user)):
+    return UserResponse(**current_user.model_dump())
+
+
+@api_router.post("/users", response_model=dict)
+async def create_user(
+    user_create: UserCreate,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав. Создавать пользователей может только администратор"
+        )
+
+    existing_user = db.get_user_by_email(user_create.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пользователь с таким email уже существует"
+        )
+
+    password = generate_password()
+    hashed_password = get_password_hash(password)
+
+    user = User(
+        email=user_create.email,
+        hashed_password=hashed_password,
+        role=user_create.role,
+        can_delete_without_approval=user_create.can_delete_without_approval,
+        created_by=current_user.id
+    )
+
+    user_data = user.model_dump()
+    user_data['password'] = user_data.pop('hashed_password')
+    db.create_user(user_data)
+
+    return {
+        "user": UserResponse(**user.model_dump()),
+        "password": password
+    }
+
+
+@api_router.get("/users")
+async def list_users(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [Role.ADMIN, Role.MODERATOR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав"
+        )
+
+    users = db.get_all_users()
+    result = []
+    for u in users:
+        u['hashed_password'] = u.pop('password', '')
+        result.append(UserResponse(**u))
+    return {"users": result}
+
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: User = Depends(get_current_user)):
+    target_user = db.get_user_by_id(user_id)
+
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+    if target_user.get("is_superadmin", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Невозможно удалить суперадминистратора"
+        )
+
+    if current_user.role == Role.ADMIN and target_user.get("role") == Role.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Модераторы не могут удалять администраторов"
+        )
+
+    if current_user.role == Role.ADMIN:
+        deleted = db.delete_user(user_id)
+
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+        db.delete_delete_requests_by_user_id(user_id)
+
+        return {"success": True, "message": "Пользователь удален"}
+
+    elif current_user.role == Role.MODERATOR:
+        if current_user.can_delete_without_approval:
+            deleted = db.delete_user(user_id)
+
+            if not deleted:
+                raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+            return {"success": True, "message": "Пользователь удален"}
+        else:
+            existing_request = db.get_pending_delete_request(user_id)
+
+            if existing_request:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Запрос на удаление уже существует"
+                )
+
+            delete_request = DeleteRequest(
+                user_id=user_id,
+                requested_by=current_user.id
+            )
+
+            db.create_delete_request(delete_request.model_dump())
+
+            return {
+                "success": True,
+                "message": "Запрос на удаление отправлен",
+                "requires_approval": True
+            }
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав"
+        )
+
+
+@api_router.get("/delete-requests")
+async def list_delete_requests(admin_user: User = Depends(get_admin_user)):
+    requests = db.get_all_pending_delete_requests()
+
+    for req in requests:
+        user = db.get_user_by_id(req["user_id"])
+        requester = db.get_user_by_id(req["requested_by"])
+
+        if user:
+            user['hashed_password'] = user.pop('password', '')
+            req["user"] = UserResponse(**user)
+        else:
+            req["user"] = None
+            
+        if requester:
+            requester['hashed_password'] = requester.pop('password', '')
+            req["requester"] = UserResponse(**requester)
+        else:
+            req["requester"] = None
+
+    return {"requests": requests}
+
+
+@api_router.post("/delete-requests/{request_id}/approve")
+async def approve_delete_request(request_id: str, admin_user: User = Depends(get_admin_user)):
+    delete_request = db.get_delete_request_by_id(request_id)
+
+    if not delete_request:
+        raise HTTPException(status_code=404, detail="Запрос не найден")
+
+    if delete_request["status"] != "pending":
+        raise HTTPException(status_code=400, detail="Запрос уже обработан")
+
+    db.delete_user(delete_request["user_id"])
+    db.update_delete_request_status(request_id, "approved")
+
+    return {"success": True, "message": "Пользователь удален"}
+
+
+@api_router.post("/delete-requests/{request_id}/reject")
+async def reject_delete_request(request_id: str, admin_user: User = Depends(get_admin_user)):
+    delete_request = db.get_delete_request_by_id(request_id)
+
+    if not delete_request:
+        raise HTTPException(status_code=404, detail="Запрос не найден")
+
+    if delete_request["status"] != "pending":
+        raise HTTPException(status_code=400, detail="Запрос уже обработан")
+
+    db.update_delete_request_status(request_id, "rejected")
+
+    return {"success": True, "message": "Запрос отклонен"}
+
+
+@api_router.patch("/users/{user_id}/delete-permission")
+async def update_delete_permission(
+    user_id: str,
+    can_delete_without_approval: bool,
+    admin_user: User = Depends(get_admin_user)
+):
+    updated = db.update_user(user_id, {"can_delete_without_approval": can_delete_without_approval})
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+    return {"success": True, "message": "Права обновлены"}
+
+
 @api_router.post("/reports/upload")
 async def upload_and_process(
         file: UploadFile = File(...),
         report_type: str = Form(...),
-        period: str = Form(default="month")
+        period: str = Form(default="month"),
+        current_user: User = Depends(get_current_user)
 ):
     if report_type not in REPORT_PROCESSORS:
         raise HTTPException(status_code=400, detail=f"Неизвестный тип отчета: {report_type}")
@@ -569,10 +981,29 @@ async def upload_and_process(
     content = await file.read()
 
     try:
-        try:
-            df = pd.read_excel(io.BytesIO(content), engine='openpyxl')
-        except Exception:
-            df = pd.read_excel(io.BytesIO(content), engine='xlrd')
+        filename = (file.filename or "").lower()
+        ext = Path(filename).suffix
+        logger.info(f"Processing file: {filename}, extension: {ext}, size: {len(content)} bytes")
+
+        df = None
+        errors = []
+
+        engines = ["openpyxl", "xlrd", None]
+        if ext == ".xls":
+            engines = ["xlrd", "openpyxl", None]
+
+        for engine in engines:
+            try:
+                logger.info(f"Trying engine: {engine}")
+                df = pd.read_excel(io.BytesIO(content), engine=engine)
+                logger.info(f"Success with engine: {engine}")
+                break
+            except Exception as engine_error:
+                errors.append(f"{engine}: {engine_error}")
+                continue
+
+        if df is None:
+            raise ValueError(f"Не удалось прочитать файл. Ошибки: {'; '.join(errors)}")
 
         processor = REPORT_PROCESSORS[report_type]
 
@@ -584,11 +1015,12 @@ async def upload_and_process(
         report = ReportResult(
             report_type=report_type,
             filename=file.filename,
-            result=result_data
+            result=result_data,
+            created_by=current_user.id,
+            created_by_email=current_user.email
         )
 
-        doc = report.model_dump()
-        await db.reports.insert_one(doc)
+        db.insert_report(report.model_dump())
 
         return {
             "id": report.id,
@@ -596,7 +1028,9 @@ async def upload_and_process(
             "report_label": REPORT_LABELS.get(report_type, report_type),
             "filename": report.filename,
             "result": result_data,
-            "timestamp": report.timestamp
+            "timestamp": report.timestamp,
+            "created_by": report.created_by,
+            "created_by_email": report.created_by_email
         }
 
     except Exception as e:
@@ -605,8 +1039,8 @@ async def upload_and_process(
 
 
 @api_router.get("/reports/history")
-async def get_report_history():
-    reports = await db.reports.find({}, {"_id": 0}).sort("timestamp", -1).to_list(100)
+async def get_report_history(current_user: User = Depends(get_current_user)):
+    reports = db.get_all_reports(limit=100)
 
     history = []
     for r in reports:
@@ -634,15 +1068,17 @@ async def get_report_history():
             "report_label": REPORT_LABELS.get(r["report_type"], r["report_type"]),
             "filename": r["filename"],
             "timestamp": r["timestamp"],
-            "summary": summary
+            "summary": summary,
+            "created_by": r.get("created_by"),
+            "created_by_email": r.get("created_by_email")
         })
 
     return {"history": history}
 
 
 @api_router.get("/reports/{report_id}")
-async def get_report(report_id: str):
-    report = await db.reports.find_one({"id": report_id}, {"_id": 0})
+async def get_report(report_id: str, current_user: User = Depends(get_current_user)):
+    report = db.get_report_by_id(report_id)
 
     if not report:
         raise HTTPException(status_code=404, detail="Отчет не найден")
@@ -651,26 +1087,33 @@ async def get_report(report_id: str):
 
 
 @api_router.delete("/reports/{report_id}")
-async def delete_report(report_id: str):
-    result = await db.reports.delete_one({"id": report_id})
-
-    if result.deleted_count == 0:
+async def delete_report(report_id: str, current_user: User = Depends(get_current_user)):
+    deleted = db.delete_report(report_id)
+    
+    if not deleted:
         raise HTTPException(status_code=404, detail="Отчет не найден")
 
     return {"success": True, "message": "Отчет удален"}
 
 
-app.include_router(api_router)
+@api_router.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
+
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
+CORS_ORIGINS = [origin.strip() for origin in CORS_ORIGINS if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
+    allow_credentials=True if CORS_ORIGINS != ['*'] else False,
+    allow_origins=CORS_ORIGINS,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+app.include_router(api_router)
