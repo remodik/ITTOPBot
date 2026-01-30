@@ -968,6 +968,19 @@ async def bootstrap_reset_password(email: EmailStr, new_password: str):
     return {"ok": True, "email": email}
 
 
+@api_router.get("/bootstrap/list-users")
+async def bootstrap_list_users():
+    users = db.get_all_users()
+    return [
+                {
+                            "id": u.get("id"),
+                                        "email": u.get("email"),
+                                                    "role": u.get("role")
+                                                            }
+                                                                    for u in users
+                                                                        ]
+
+
 @api_router.patch("/users/{user_id}/delete-permission")
 async def update_delete_permission(
     user_id: str,
