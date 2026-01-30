@@ -1,19 +1,20 @@
+# Docker Compose for local development
+# Use: docker-compose up
+#
+# Profiles:
+#   - default: SQLite backend (simple, no external DB)
+#   - postgres: PostgreSQL backend (mirrors production)
+#
+# Examples:
+#   docker-compose up                    # SQLite mode
+#   docker-compose --profile postgres up # PostgreSQL mode
+
 version: '3.8'
 
 services:
-  mongodb:
-    image: mongo:6.0
-    container_name: college_reports_mongodb
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_DATABASE=college_reports
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - college_network
-
+  # ===========================================
+  # Backend API (FastAPI)
+  # ===========================================
   backend:
     build:
       context: ./backend
@@ -23,31 +24,99 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - MONGO_URL=mongodb://mongodb:27017
-      - DB_NAME=college_reports
-      - CORS_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
-    depends_on:
-      - mongodb
+      - COLLEGE_DB_PATH=/app/data/college_reports.db
+      - CORS_ORIGINS=http://localhost:8080,http://127.0.0.1:8080,http://localhost:3000
+      - JWT_SECRET_KEY=dev-secret-key-not-for-production
+      - HOST=0.0.0.0
+      - PORT=8000
     networks:
       - college_network
     volumes:
       - ./backend:/app
+      - sqlite_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # ===========================================
+  # Backend with PostgreSQL (Production-like)
+  # ===========================================
+  backend-postgres:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: college_reports_backend_pg
+    restart: unless-stopped
+    profiles:
+      - postgres
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://college_admin:college_password@postgres:5432/college_reports
+      - CORS_ORIGINS=http://localhost:8080,http://127.0.0.1:8080,http://localhost:3000
+      - JWT_SECRET_KEY=dev-secret-key-not-for-production
+      - HOST=0.0.0.0
+      - PORT=8000
+    networks:
+      - college_network
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================
+  # PostgreSQL Database (Production-like)
+  # ===========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: college_reports_postgres
+    restart: unless-stopped
+    profiles:
+      - postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=college_admin
+      - POSTGRES_PASSWORD=college_password
+      - POSTGRES_DB=college_reports
+    networks:
+      - college_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U college_admin -d college_reports"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # Frontend (Static files server)
+  # ===========================================
   frontend:
-    image: python:3.9-slim
+    image: python:3.11-slim
     container_name: college_reports_frontend
     restart: unless-stopped
     ports:
       - "8080:8080"
-    working_dir: /app/public
+    working_dir: /app
     command: python -m http.server 8080
     volumes:
-      - ./frontend/public:/app/public
+      - ./frontend:/app
     networks:
       - college_network
 
 volumes:
-  mongodb_data:
+  sqlite_data:
+    driver: local
+  postgres_data:
     driver: local
 
 networks:
