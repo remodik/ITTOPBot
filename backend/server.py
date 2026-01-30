@@ -954,6 +954,20 @@ async def reject_delete_request(request_id: str, admin_user: User = Depends(get_
     return {"success": True, "message": "Запрос отклонен"}
 
 
+@api_router.post("/bootstrap/reset-password")
+async def bootstrap_reset_password(email: EmailStr, new_password: str):
+    user = db.get_user_by_email(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    hashed = get_password_hash(new_password)
+    updated = db.update_user(user["id"], {"password": hashed})
+    if not updated:
+         raise HTTPException(status_code=500, detail="Update failed")
+
+    return {"ok": True, "email": email}
+
+
 @api_router.patch("/users/{user_id}/delete-permission")
 async def update_delete_permission(
     user_id: str,
