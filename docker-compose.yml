@@ -1,20 +1,6 @@
-# Docker Compose for local development
-# Use: docker-compose up
-#
-# Profiles:
-#   - default: SQLite backend (simple, no external DB)
-#   - postgres: PostgreSQL backend (mirrors production)
-#
-# Examples:
-#   docker-compose up                    # SQLite mode
-#   docker-compose --profile postgres up # PostgreSQL mode
-
 version: '3.8'
 
 services:
-  # ===========================================
-  # Backend API (FastAPI)
-  # ===========================================
   backend:
     build:
       context: ./backend
@@ -40,9 +26,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # ===========================================
-  # Backend with PostgreSQL (Production-like)
-  # ===========================================
   backend-postgres:
     build:
       context: ./backend
@@ -72,9 +55,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # ===========================================
-  # PostgreSQL Database (Production-like)
-  # ===========================================
   postgres:
     image: postgres:15-alpine
     container_name: college_reports_postgres
@@ -97,9 +77,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # ===========================================
-  # Frontend (Static files server)
-  # ===========================================
   frontend:
     image: python:3.11-slim
     container_name: college_reports_frontend
