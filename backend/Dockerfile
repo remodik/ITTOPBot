@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-COPY --form=builder /install /usr/local
+COPY --from=builder /install /usr/local
 
 RUN useradd --create-home --shell /bin/bash appuser \
     && mkdir -p /app/data \
@@ -42,7 +42,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 CMD ["sh", "-c", "gunicorn server:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind ${HOST}:${PORT}"]
 
 
-FROM production as development
+FROM prod as development
 
 USER root
 
