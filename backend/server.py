@@ -1086,6 +1086,30 @@ async def get_report(report_id: str, current_user: User = Depends(get_current_us
     return report
 
 
+@api_router.post("/bootstrap/admin")
+async def bootstrap_admin(email: EmailStr, password: str):
+    existing = db.get_user_by_email(email)
+    if existing:
+        raise HTTPException(status_code=400, detail="User already exists")
+
+    user_id = str(uuid.uuid4())
+    hashed = get_password_hash(password)
+
+    db.create_user({
+        "id": user_id,
+        "email": email,
+        "password": hashed,
+        "role": "admin",
+        "is_superadmin": True,
+        "can_delete_without_approval": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": None
+    })
+
+    return {"ok": True, "email": email}
+
+
+
 @api_router.delete("/reports/{report_id}")
 async def delete_report(report_id: str, current_user: User = Depends(get_current_user)):
     deleted = db.delete_report(report_id)
