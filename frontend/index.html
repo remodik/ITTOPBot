@@ -1,794 +1,106 @@
 <!DOCTYPE html>
-<html lang="ru">
+<!--suppress CssUnusedSymbol, JSUnresolvedReference, CssNonIntegerLengthInPixels, JSValidateTypes -->
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academic Reports • Система анализа отчетов</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
-    
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>Academic Reports</title>
+    <script src="./config.js" onerror="console.log('config.js not found, using defaults')"></script>
     <style>
-        * {
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
         :root {
-            --bg-primary: #0a0e1a;
-            --bg-secondary: #111827;
-            --bg-tertiary: #1a2234;
-            --bg-elevated: #1e293b;
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a24;
+            --bg-card: rgba(26, 26, 36, 0.8);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --bg-glass-hover: rgba(255, 255, 255, 0.06);
             
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-tertiary: #94a3b8;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
             
-            --accent-primary: #3b82f6;
-            --accent-secondary: #06b6d4;
-            --accent-tertiary: #8b5cf6;
+            --accent-primary: #6366f1;
+            --accent-primary-rgb: 99, 102, 241;
+            --accent-hover: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.4);
             
-            --success: #10b981;
-            --warning: #f59e0b;
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.1);
             --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --info: #3b82f6;
+            --info-bg: rgba(59, 130, 246, 0.1);
             
-            --border: rgba(148, 163, 184, 0.1);
-            --border-hover: rgba(148, 163, 184, 0.2);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
             
-            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-            --gradient-accent: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            --gradient-surface: linear-gradient(135deg, #1e293b 0%, #1a2234 100%);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 40px var(--accent-glow);
             
-            --space-xs: 0.5rem;
-            --space-sm: 1rem;
-            --space-md: 1.5rem;
-            --space-lg: 2rem;
-            --space-xl: 3rem;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
             
-            --radius-sm: 0.5rem;
-            --radius-md: 0.75rem;
-            --radius-lg: 1rem;
-            --radius-xl: 1.5rem;
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-glass: rgba(0, 0, 0, 0.02);
+            --bg-glass-hover: rgba(0, 0, 0, 0.04);
             
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-            --shadow-glow: 0 0 30px rgba(59, 130, 246, 0.3);
-        }
-
-        body {
-            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: var(--space-xl) var(--space-lg);
-            position: relative;
-            z-index: 1;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: var(--space-xl);
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        .logo {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--space-sm);
-            margin-bottom: var(--space-md);
-        }
-
-        .logo-icon {
-            width: 56px;
-            height: 56px;
-            background: var(--gradient-primary);
-            border-radius: var(--radius-lg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: var(--shadow-glow);
-            animation: float 3s ease-in-out infinite;
-        }
-
-        h1 {
-            font-family: 'Sora', sans-serif;
-            font-size: 3rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: var(--space-xs);
-            letter-spacing: -0.02em;
-        }
-
-        .subtitle {
-            font-size: 1.125rem;
-            color: var(--text-tertiary);
-            font-weight: 500;
-        }
-
-        .reports-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: var(--space-md);
-            margin-bottom: var(--space-xl);
-        }
-
-        .report-card {
-            background: var(--gradient-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-lg);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            animation: fadeInUp 0.6s ease-out backwards;
-        }
-
-        .report-card:nth-child(1) { animation-delay: 0.1s; }
-        .report-card:nth-child(2) { animation-delay: 0.2s; }
-        .report-card:nth-child(3) { animation-delay: 0.3s; }
-        .report-card:nth-child(4) { animation-delay: 0.4s; }
-        .report-card:nth-child(5) { animation-delay: 0.5s; }
-        .report-card:nth-child(6) { animation-delay: 0.6s; }
-
-        .report-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--gradient-primary);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .report-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--border-hover);
-            box-shadow: var(--shadow-xl);
-        }
-
-        .report-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .report-card.active {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-
-        .report-card-icon {
-            font-size: 2.5rem;
-            margin-bottom: var(--space-sm);
-            display: block;
-            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
-        }
-
-        .report-card-title {
-            font-family: 'Sora', sans-serif;
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: var(--space-xs);
-            color: var(--text-primary);
-        }
-
-        .report-card-desc {
-            font-size: 0.875rem;
-            color: var(--text-tertiary);
-            line-height: 1.5;
-        }
-
-        .upload-section {
-            background: var(--bg-elevated);
-            border: 2px dashed var(--border);
-            border-radius: var(--radius-xl);
-            padding: var(--space-xl);
-            text-align: center;
-            transition: all 0.3s ease;
-            margin-bottom: var(--space-xl);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .upload-section.dragover {
-            border-color: var(--accent-primary);
-            background: rgba(59, 130, 246, 0.05);
-            transform: scale(1.02);
-        }
-
-        .upload-icon {
-            width: 80px;
-            height: 80px;
-            background: var(--gradient-primary);
-            border-radius: var(--radius-lg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            margin: 0 auto var(--space-md);
-            box-shadow: var(--shadow-glow);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .upload-section h3 {
-            font-family: 'Sora', sans-serif;
-            font-size: 1.5rem;
-            margin-bottom: var(--space-sm);
-        }
-
-        .upload-section p {
-            color: var(--text-tertiary);
-            margin-bottom: var(--space-md);
-        }
-
-        .upload-btn {
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            padding: var(--space-sm) var(--space-lg);
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: var(--space-xs);
-            box-shadow: var(--shadow-md);
-        }
-
-        .upload-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .upload-btn:active {
-            transform: translateY(0);
-        }
-
-        .period-btn {
-            background: var(--bg-elevated);
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-            padding: var(--space-sm) var(--space-md);
-            border-radius: var(--radius-md);
-            font-weight: 500;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .period-btn:hover {
-            border-color: var(--accent-primary);
-            color: var(--text-primary);
-        }
-
-        .period-btn.active {
-            background: var(--gradient-primary);
-            color: white;
-            border-color: transparent;
-        }
-
-        .schedule-item {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-xs);
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .schedule-item:hover {
-            border-color: var(--border-hover);
-        }
-
-        .schedule-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: var(--space-sm) var(--space-md);
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .schedule-header:hover {
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .schedule-info {
-            display: flex;
-            align-items: center;
-            gap: var(--space-md);
-            flex: 1;
-        }
-
-        .schedule-name {
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .schedule-toggle {
-            display: flex;
-            align-items: center;
-            gap: var(--space-xs);
-            color: var(--text-tertiary);
-            font-size: 0.9rem;
-        }
-
-        .schedule-toggle .arrow {
-            transition: transform 0.3s ease;
-            font-size: 0.8rem;
-        }
-
-        .schedule-item.open .schedule-toggle .arrow {
-            transform: rotate(180deg);
-        }
-
-        .schedule-details {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            background: var(--bg-tertiary);
-        }
-
-        .schedule-item.open .schedule-details {
-            max-height: 500px;
-        }
-
-        .schedule-details-inner {
-            padding: var(--space-sm) var(--space-md);
-            border-top: 1px solid var(--border);
-        }
-
-        .schedule-occurrence {
-            display: flex;
-            align-items: center;
-            gap: var(--space-md);
-            padding: var(--space-xs) 0;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .schedule-occurrence:not(:last-child) {
-            border-bottom: 1px dashed var(--border);
-        }
-
-        .schedule-day {
-            min-width: 100px;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .schedule-time {
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--accent-secondary);
-        }
-
-        .schedule-item.topic-invalid {
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-
-        .schedule-item.topic-invalid:hover {
-            border-color: rgba(239, 68, 68, 0.5);
-        }
-
-        .schedule-item.topic-valid {
-            border-color: rgba(16, 185, 129, 0.3);
-        }
-
-        .schedule-item.topic-valid:hover {
-            border-color: rgba(16, 185, 129, 0.5);
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .tabs {
-            display: flex;
-            gap: var(--space-xs);
-            margin-bottom: var(--space-lg);
-            background: var(--bg-secondary);
-            padding: var(--space-xs);
-            border-radius: var(--radius-lg);
-            overflow-x: auto;
-        }
-
-        .tab {
-            background: transparent;
-            border: none;
-            color: var(--text-tertiary);
-            padding: var(--space-sm) var(--space-md);
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9375rem;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            position: relative;
-        }
-
-        .tab:hover {
-            color: var(--text-secondary);
-            background: var(--bg-tertiary);
-        }
-
-        .tab.active {
-            background: var(--gradient-primary);
-            color: white;
-            box-shadow: var(--shadow-md);
-        }
-
-        .result-panel {
-            background: var(--bg-elevated);
-            border-radius: var(--radius-xl);
-            padding: var(--space-xl);
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-lg);
-            padding-bottom: var(--space-md);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .result-title {
-            font-family: 'Sora', sans-serif;
-            font-size: 1.75rem;
-            font-weight: 700;
-        }
-
-        .result-meta {
-            display: flex;
-            gap: var(--space-md);
-            flex-wrap: wrap;
-        }
-
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: var(--space-xs);
-            font-size: 0.875rem;
-            color: var(--text-tertiary);
-        }
-
-        .meta-badge {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            font-size: 0.875rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: var(--space-md);
-            margin-bottom: var(--space-lg);
-        }
-
-        .stat-card {
-            background: var(--gradient-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-md);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: var(--text-tertiary);
-            margin-bottom: var(--space-xs);
-        }
-
-        .stat-value {
-            font-family: 'Sora', sans-serif;
-            font-size: 2rem;
-            font-weight: 800;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 0.9375rem;
-        }
-
-        thead th {
-            background: var(--bg-secondary);
-            color: var(--text-secondary);
-            font-weight: 600;
-            padding: var(--space-md);
-            text-align: left;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        thead th:first-child {
-            border-top-left-radius: var(--radius-md);
-        }
-
-        thead th:last-child {
-            border-top-right-radius: var(--radius-md);
-        }
-
-        tbody tr {
-            transition: background 0.2s ease;
-        }
-
-        tbody tr:hover {
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        tbody td {
-            padding: var(--space-md);
-            border-bottom: 1px solid var(--border);
-        }
-
-        tbody tr:last-child td:first-child {
-            border-bottom-left-radius: var(--radius-md);
-        }
-
-        tbody tr:last-child td:last-child {
-            border-bottom-right-radius: var(--radius-md);
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            font-size: 0.8125rem;
-            white-space: nowrap;
-        }
-
-        .badge-success {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-
-        .badge-warning {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--warning);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-        }
-
-        .badge-danger {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .badge-info {
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--accent-primary);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: var(--bg-tertiary);
-            border-radius: var(--radius-sm);
-            overflow: hidden;
-            margin: var(--space-md) 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--gradient-primary);
-            border-radius: var(--radius-sm);
-            transition: width 0.5s ease;
-            animation: shimmer 2s infinite;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: var(--space-lg);
-            right: var(--space-lg);
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-md) var(--space-lg);
-            box-shadow: var(--shadow-xl);
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            min-width: 300px;
-            animation: slideInRight 0.4s ease-out;
-            z-index: 1000;
-        }
-
-        .toast.success {
-            border-left: 4px solid var(--success);
-        }
-
-        .toast.error {
-            border-left: 4px solid var(--danger);
-        }
-
-        .toast.info {
-            border-left: 4px solid var(--accent-primary);
-        }
-
-        .loading {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--space-xs);
-        }
-
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent-primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: var(--space-xl);
-            color: var(--text-tertiary);
-        }
-
-        .empty-state-icon {
-            font-size: 4rem;
-            margin-bottom: var(--space-md);
-            opacity: 0.5;
-        }
-
-        .history-item {
-            background: var(--gradient-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-md);
-            margin-bottom: var(--space-sm);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .history-item:hover {
-            border-color: var(--border-hover);
-            transform: translateX(4px);
-        }
-
-        .history-info {
-            flex: 1;
-        }
-
-        .history-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .history-meta {
-            font-size: 0.875rem;
-            color: var(--text-tertiary);
-            display: flex;
-            gap: var(--space-md);
-        }
-
-        .history-actions {
-            display: flex;
-            gap: var(--space-xs);
-        }
-
-        .btn-icon {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            width: 36px;
-            height: 36px;
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-icon:hover {
-            background: var(--bg-tertiary);
-            border-color: var(--border-hover);
-        }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--bg-tertiary);
-            border-radius: var(--radius-sm);
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--border-hover);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            
+            --border: rgba(0, 0, 0, 0.08);
+            --border-hover: rgba(0, 0, 0, 0.15);
+            
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        @keyframes fadeInUp {
+        @keyframes slideUp {
             from {
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
 
-        @keyframes fadeInDown {
+        @keyframes slideDown {
             from {
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -800,246 +112,1991 @@
                 opacity: 0;
                 transform: translateX(100px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
             }
         }
 
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
             }
-            50% {
-                transform: translateY(-10px);
+
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
             }
         }
 
         @keyframes pulse {
-            0%, 100% {
-                box-shadow: var(--shadow-glow);
-            }
-            50% {
-                box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
-            }
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         @keyframes shimmer {
-            0% {
-                background-position: -200% center;
-            }
-            100% {
-                background-position: 200% center;
-            }
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0 50%; }
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(var(--accent-primary-rgb), 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(var(--accent-primary-rgb), 0.05) 0%, transparent 50%),
+                var(--bg-primary);
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            animation: slideInRight 0.5s ease reverse;
+            animation-direction: normal;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .logo-text {
+            font-size: 1.125rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-hover));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-user {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            animation: slideUp 0.4s ease 0.1s both;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .user-email {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .user-role {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: var(--accent-primary);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            padding: 0.75rem 1.5rem 0.5rem;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            margin: 0.125rem 0.75rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+            background: var(--bg-glass-hover);
+        }
+
+        .nav-item.active {
+            color: white;
+            background: transparent;
+        }
+
+        .nav-item.active::before { opacity: 1; }
+
+        .nav-item span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.625rem 0;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background: var(--bg-tertiary);
+            border-radius: 100px;
+            position: relative;
+            cursor: pointer;
+            transition: background var(--transition-normal);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform var(--transition-normal);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toggle-switch.active { background: var(--accent-primary); }
+
+        .toggle-switch.active::after { transform: translateX(20px); }
+
+        .logout-btn {
+            width: 100%;
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: var(--danger-bg);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all var(--transition-normal);
+        }
+
+        .logout-btn:hover {
+            background: var(--danger);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .main-content {
+            flex: 1;
+            overflow: auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            animation: slideDown 0.5s ease;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: all var(--transition-normal);
+            animation: slideUp 0.5s ease both;
+        }
+
+        .card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .report-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-hover));
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .report-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg), 0 0 30px rgba(var(--accent-primary-rgb), 0.15);
+        }
+
+        .report-card:hover::before { opacity: 1; }
+
+        .report-card.active {
+            border-color: var(--accent-primary);
+            background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.1), transparent);
+        }
+
+        .report-card.active::before { opacity: 1; }
+
+        .report-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.2), rgba(var(--accent-primary-rgb), 0.05));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .report-title {
+            font-weight: 600;
+            font-size: 0.9375rem;
+            margin-bottom: 0.375rem;
+        }
+
+        .report-desc {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        .upload-area {
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all var(--transition-normal);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.05), transparent);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--accent-primary);
+            background: var(--bg-glass-hover);
+        }
+
+        .upload-area:hover::before,
+        .upload-area.dragover::before { opacity: 1; }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .upload-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            transition: all var(--transition-normal);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-icon.success {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .stat-icon.danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .stat-icon.warning {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .stat-icon.info {
+            background: var(--info-bg);
+            color: var(--info);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            padding: 0.875rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid var(--border);
+            transition: background var(--transition-fast);
+        }
+
+        tr:hover td { background: var(--bg-glass-hover); }
+
+        tr:last-child td { border-bottom: none; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .badge-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .badge-warning {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .badge-info {
+            background: var(--info-bg);
+            color: var(--info);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .btn:hover::before { opacity: 1; }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+            color: white;
+            box-shadow: 0 2px 8px rgba(var(--accent-primary-rgb), 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(var(--accent-primary-rgb), 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--border-hover);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #16a34a);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 0.875rem;
+            font-size: 0.8125rem;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: var(--radius-sm);
+        }
+
+        .form-group { margin-bottom: 1.25rem; }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            font-size: 0.9375rem;
+            transition: all var(--transition-normal);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.15);
+        }
+
+        .form-input::placeholder { color: var(--text-muted); }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2.5rem;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            cursor: pointer;
+        }
+
+        .form-checkbox input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .login-box {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            animation: scaleIn 0.5s ease;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin: 0 auto 1.25rem;
+            box-shadow: var(--shadow-glow);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.375rem;
+        }
+
+        .login-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow: auto;
+            box-shadow: var(--shadow-lg);
+            animation: scaleIn 0.3s ease;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .modal-close:hover {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .modal-body { padding: 1.5rem; }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1001;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            backdrop-filter: blur(20px);
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 300px;
+            max-width: 400px;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast.removing { animation: slideOutRight 0.3s ease forwards; }
+
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .toast.success .toast-icon {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .toast.error .toast-icon {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .toast.warning .toast-icon {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .toast.info .toast-icon {
+            background: var(--info-bg);
+            color: var(--info);
+        }
+
+        .toast-content { flex: 1; }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .toast-message {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            margin-top: 0.125rem;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: color var(--transition-fast);
+        }
+
+        .toast-close:hover { color: var(--text-primary); }
+
+        .skeleton {
+            background: linear-gradient(
+                90deg,
+                var(--bg-tertiary) 25%,
+                var(--bg-glass-hover) 50%,
+                var(--bg-tertiary) 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-sm);
+        }
+
+        .skeleton-text {
+            height: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .skeleton-title {
+            height: 1.5rem;
+            width: 60%;
+            margin-bottom: 0.75rem;
+        }
+
+        .skeleton-card {
+            height: 120px;
+            border-radius: var(--radius-lg);
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .spinner-lg {
+            width: 40px;
+            height: 40px;
+            border-width: 3px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .loading-content { text-align: center; }
+
+        .loading-content .spinner { margin: 0 auto 1rem; }
+
+        .user-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all var(--transition-normal);
+            animation: slideUp 0.3s ease both;
+        }
+
+        .user-item:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-item-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-details .email {
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+
+        .user-details .meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--bg-tertiary);
+            padding: 0.375rem;
+            border-radius: var(--radius-md);
+            width: fit-content;
+        }
+
+        .period-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            transition: all var(--transition-normal);
+        }
+
+        .period-btn:hover { color: var(--text-primary); }
+
+        .period-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .accordion-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .accordion-item:hover { border-color: var(--border-hover); }
+
+        .accordion-header {
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background var(--transition-fast);
+        }
+
+        .accordion-header:hover { background: var(--bg-glass-hover); }
+
+        .accordion-icon { transition: transform var(--transition-normal); }
+
+        .accordion-item.open .accordion-icon { transform: rotate(180deg); }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition-slow);
+        }
+
+        .accordion-item.open .accordion-content { max-height: 500px; }
+
+        .accordion-body {
+            padding: 0 1.25rem 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .request-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            transition: all var(--transition-normal);
+            animation: slideUp 0.3s ease both;
+        }
+
+        .request-item:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .request-info h4 {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            margin-bottom: 0.375rem;
+        }
+
+        .request-info p {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .hidden { display: none !important; }
+
+        .text-center { text-align: center; }
+
+        .text-muted { color: var(--text-muted); }
+
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-3 { margin-top: 0.75rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
 
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                transition: left var(--transition-normal);
             }
 
-            .reports-grid {
-                grid-template-columns: 1fr;
+            .sidebar.open { left: 0; }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 99;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity var(--transition-normal);
             }
 
-            .container {
-                padding: var(--space-lg) var(--space-sm);
+            .sidebar-overlay.open {
+                opacity: 1;
+                pointer-events: auto;
             }
 
-            .tabs {
-                overflow-x: auto;
+            .mobile-header {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                padding: 1rem;
+                background: var(--bg-secondary);
+                border-bottom: 1px solid var(--border);
             }
 
-            .toast {
-                right: var(--space-sm);
-                left: var(--space-sm);
-                min-width: auto;
+            .menu-toggle {
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--bg-tertiary);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-sm);
+                cursor: pointer;
             }
+
+            .main-content { padding: 1rem; }
+
+            .reports-grid { grid-template-columns: 1fr; }
+
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+            .user-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .user-actions { width: 100%; }
+
+            .user-actions .btn { flex: 1; }
         }
 
-        .hidden {
-            display: none !important;
+        @media (min-width: 769px) {
+            .mobile-header,
+            .sidebar-overlay { display: none; }
         }
 
-        .section-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border), transparent);
-            margin: var(--space-xl) 0;
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
         }
 
-        code, .mono {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875em;
-            background: var(--bg-secondary);
-            padding: 0.125rem 0.375rem;
-            border-radius: 0.25rem;
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
         }
+
+        .empty-state-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state-desc { font-size: 0.875rem; }
+
+        .progress-bar {
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-hover));
+            border-radius: 2px;
+            transition: width var(--transition-slow);
+        }
+
+        .report-card { animation: slideUp 0.5s ease both; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <div class="logo-icon">📊</div>
-            </div>
-            <h1>Academic Reports</h1>
-            <p class="subtitle">Система интеллектуального анализа академических отчетов</p>
-        </header>
-
-        <div class="reports-grid" id="reports-grid">
-            <div class="report-card" data-type="schedule">
-                <span class="report-card-icon">📅</span>
-                <h3 class="report-card-title">Расписание групп</h3>
-                <p class="report-card-desc">Автоматический подсчет пар по дисциплинам с поддержкой диапазонов</p>
-            </div>
-            <div class="report-card" data-type="topics">
-                <span class="report-card-icon">📚</span>
-                <h3 class="report-card-title">Темы занятий</h3>
-                <p class="report-card-desc">Проверка корректности формата записи тем уроков</p>
-            </div>
-            <div class="report-card" data-type="students">
-                <span class="report-card-icon">👥</span>
-                <h3 class="report-card-title">Отчет по студентам</h3>
-                <p class="report-card-desc">Анализ успеваемости и выявление проблемных моментов</p>
-            </div>
-            <div class="report-card" data-type="attendance">
-                <span class="report-card-icon">✓</span>
-                <h3 class="report-card-title">Посещаемость</h3>
-                <p class="report-card-desc">Контроль посещаемости преподавателей</p>
-            </div>
-            <div class="report-card" data-type="homework">
-                <span class="report-card-icon">✎</span>
-                <h3 class="report-card-title">Проверка ДЗ</h3>
-                <p class="report-card-desc">Мониторинг проверки домашних заданий</p>
-            </div>
-            <div class="report-card" data-type="student_homework">
-                <span class="report-card-icon">📝</span>
-                <h3 class="report-card-title">Сданные ДЗ студентами</h3>
-                <p class="report-card-desc">Отслеживание выполнения заданий студентами</p>
-            </div>
-        </div>
-
-        <div class="upload-section" id="upload-section">
-            <div class="upload-icon">📤</div>
-            <h3>Загрузите файл отчета</h3>
-            <p>Перетащите .xls или .xlsx файл сюда или выберите файл</p>
-            <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                <span>📁</span>
-                Выбрать файл
-            </button>
-            <input type="file" id="file-input" accept=".xls,.xlsx">
-        </div>
-
-        <div class="period-selector hidden" id="period-selector" style="margin-bottom: var(--space-lg); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-lg); border: 1px solid var(--border);">
-            <h4 style="margin-bottom: var(--space-sm); color: var(--text-secondary);">Выберите период:</h4>
-            <div style="display: flex; gap: var(--space-sm);">
-                <button class="period-btn active" data-period="month">📅 За месяц</button>
-                <button class="period-btn" data-period="week">📆 За неделю</button>
-                <button class="period-btn" data-period="day">🗓️ За день</button>
-            </div>
-        </div>
-
-        <div class="tabs">
-            <button class="tab active" data-tab="result" id="result-tab">Результат</button>
-            <button class="tab" data-tab="history" id="history-tab">История</button>
-        </div>
-
-        <div class="result-panel" id="result-content">
-            <div class="empty-state">
-                <div class="empty-state-icon">📊</div>
-                <p>Выберите тип отчета и загрузите файл для начала анализа</p>
-            </div>
-        </div>
-
-        <div class="result-panel hidden" id="history-content">
-            <div class="result-header">
-                <h2 class="result-title">История отчетов</h2>
-            </div>
-            <div id="history-list"></div>
-        </div>
-    </div>
+    <div class="bg-pattern"></div>
+    <div id="toast-container" class="toast-container"></div>
+    <div id="app"></div>
 
     <script>
-        const API_URL = 'http://localhost:8000/api';
-        let selectedReportType = null;
-        let selectedPeriod = 'month';
-        let currentReport = null;
+        const Security = {
+            escapeHtml(str) {
+                if (str === null || str === undefined) return '';
+                const div = document.createElement('div');
+                div.textContent = String(str);
+                return div.innerHTML;
+            },
 
-        document.querySelectorAll('.report-card').forEach(card => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('.report-card').forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
-                selectedReportType = card.dataset.type;
-
-                const periodSelector = document.getElementById('period-selector');
-                if (selectedReportType === 'homework') {
-                    periodSelector.classList.remove('hidden');
-                } else {
-                    periodSelector.classList.add('hidden');
+            sanitizeObject(obj) {
+                if (typeof obj === 'string') return this.escapeHtml(obj);
+                if (Array.isArray(obj)) return obj.map(item => this.sanitizeObject(item));
+                if (obj && typeof obj === 'object') {
+                    const sanitized = {};
+                    for (const [key, value] of Object.entries(obj)) {
+                        sanitized[this.escapeHtml(key)] = this.sanitizeObject(value);
+                    }
+                    return sanitized;
                 }
-            });
-        });
+                return obj;
+            },
 
-        document.querySelectorAll('.period-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedPeriod = btn.dataset.period;
-            });
-        });
+            generateCSRFToken() {
+                const array = new Uint8Array(32);
+                crypto.getRandomValues(array);
+                return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+            },
 
-        const fileInput = document.getElementById('file-input');
-        const uploadSection = document.getElementById('upload-section');
+            isValidEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            },
 
-        fileInput.addEventListener('change', handleFileSelect);
-
-        uploadSection.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadSection.classList.add('dragover');
-        });
-
-        uploadSection.addEventListener('dragleave', () => {
-            uploadSection.classList.remove('dragover');
-        });
-
-        uploadSection.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadSection.classList.remove('dragover');
-
-            const file = e.dataTransfer.files[0];
-            if (file) {
-                handleFile(file);
+            rateLimiter: new Map(),
+            
+            checkRateLimit(action, maxAttempts = 5, windowMs = 60000) {
+                const now = Date.now();
+                const key = action;
+                
+                if (!this.rateLimiter.has(key)) {
+                    this.rateLimiter.set(key, { attempts: 1, windowStart: now });
+                    return true;
+                }
+                
+                const data = this.rateLimiter.get(key);
+                
+                if (now - data.windowStart > windowMs) {
+                    this.rateLimiter.set(key, { attempts: 1, windowStart: now });
+                    return true;
+                }
+                
+                if (data.attempts >= maxAttempts) {
+                    return false;
+                }
+                
+                data.attempts++;
+                return true;
             }
-        });
+        };
 
-        async function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (file) {
-                await handleFile(file);
+        const Cookies = {
+            set(name, value, days = 7, secure = true) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                const expires = `expires=${date.toUTCString()}`;
+                const secureFlag = secure && location.protocol === 'https:' ? ';secure' : '';
+                document.cookie = `${name}=${encodeURIComponent(value)};${expires};path=/;samesite=strict${secureFlag}`;
+            },
+
+            get(name) {
+                const nameEQ = `${name}=`;
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    cookie = cookie.trim();
+                    if (cookie.indexOf(nameEQ) === 0) {
+                        return decodeURIComponent(cookie.substring(nameEQ.length));
+                    }
+                }
+                return null;
+            },
+
+            delete(name) {
+                document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;samesite=strict`;
+            }
+        };
+
+        const API_URL = window.location.protocol === 'file:'
+            ? 'http://localhost:8000/api'
+            : '/api';
+
+        let state = {
+            token: Cookies.get('auth_token') || localStorage.getItem('token'),
+            csrfToken: Cookies.get('csrf_token') || Security.generateCSRFToken(),
+            currentUser: null,
+            currentPage: 'reports',
+            selectedReportType: null,
+            selectedPeriod: 'month',
+            theme: localStorage.getItem('theme') || 'dark',
+            sidebarOpen: false
+        };
+
+        if (!Cookies.get('csrf_token')) {
+            Cookies.set('csrf_token', state.csrfToken, 1);
+        }
+
+        const Toast = {
+            show(message, type = 'info', duration = 4000) {
+                const container = document.getElementById('toast-container');
+                const id = Date.now();
+                
+                const icons = {
+                    success: '✓',
+                    error: '✕',
+                    warning: '⚠',
+                    info: 'ℹ'
+                };
+
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.id = `toast-${id}`;
+                toast.innerHTML = `
+                    <div class="toast-icon">${icons[type]}</div>
+                    <div class="toast-content">
+                        <div class="toast-message">${Security.escapeHtml(message)}</div>
+                    </div>
+                    <button class="toast-close" onclick="Toast.remove(${id})">✕</button>
+                `;
+
+                container.appendChild(toast);
+
+                setTimeout(() => this.remove(id), duration);
+            },
+
+            remove(id) {
+                const toast = document.getElementById(`toast-${id}`);
+                if (toast) {
+                    toast.classList.add('removing');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }
+        };
+
+        const Loading = {
+            show(message = 'Загрузка...') {
+                const existing = document.querySelector('.loading-overlay');
+                if (existing) return;
+
+                const overlay = document.createElement('div');
+                overlay.className = 'loading-overlay';
+                overlay.innerHTML = `
+                    <div class="loading-content">
+                        <div class="spinner spinner-lg"></div>
+                        <p style="color: var(--text-secondary); margin-top: 1rem;">${Security.escapeHtml(message)}</p>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            },
+
+            hide() {
+                const overlay = document.querySelector('.loading-overlay');
+                if (overlay) {
+                    overlay.style.animation = 'fadeIn 0.2s ease reverse';
+                    setTimeout(() => overlay.remove(), 200);
+                }
+            }
+        };
+
+        async function fetchAPI(endpoint, options = {}) {
+            const headers = {
+                'X-CSRF-Token': state.csrfToken,
+                ...(options.headers || {}),
+            };
+
+            if (state.token && !options.skipAuth) {
+                headers['Authorization'] = `Bearer ${state.token}`;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+
+                if (response.status === 401) {
+                    logout();
+                    throw new Error('Unauthorized');
+                }
+
+                if (response.status === 429) {
+                    Toast.show('Слишком много запросов. Подождите немного.', 'warning');
+                    throw new Error('Rate limited');
+                }
+
+                return response;
+            } catch (error) {
+                if (error.message === 'Failed to fetch') {
+                    Toast.show('Ошибка соединения с сервером', 'error');
+                }
+                throw error;
             }
         }
 
-        async function handleFile(file) {
-            if (!selectedReportType) {
-                showToast('Сначала выберите тип отчета', 'error');
+        async function fetchWithTimeout(url, timeoutMs = 9000) {
+            const controller = new AbortController();
+            const t = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                return await fetch(url, {signal: controller.signal, cache: "no-cache"});
+            } finally {
+                clearTimeout(t);
+            }
+        }
+
+        async function warmupBackend({
+                                         url = `${API_URL}/health`,
+                                         attempts = 9,
+                                         delayMs = 3000,
+                                         timeoutMs = 9000,
+                                         onStatus = (msg) => console.log(msg),
+                                     } = {}) {
+            for (let i = 1; i <= attempts; i++) {
+                onStatus(`Запуск сервиса... Попытка ${i} из ${attempts}`);
+                try {
+                    const res = await fetchWithTimeout(url, timeoutMs);
+                    if (res.ok) return true;
+                } catch (_) {}
+                await new Promise((r) => setTimeout(r, delayMs));
+            }
+            return false;
+        }
+
+        async function ensureBackendReady() {
+            Loading.show('Запуск сервиса...');
+
+            const ok = await warmupBackend({
+                url: `${API_URL}/health`,
+                attempts: 10,
+                delayMs: 3000,
+                timeoutMs: 9000,
+                onStatus: (msg) => Loading.show(msg),
+            });
+
+            Loading.hide();
+
+            if (!ok) {
+                Toast.show('Сервер недоступен. Пожалуйста, попробуйте позже.', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const ready = await ensureBackendReady();
+            if (!ready) return;
+        });
+
+        async function login(email, password) {
+            if (!Security.checkRateLimit('login', 5, 60000)) {
+                Toast.show('Слишком много попыток. Подождите минуту.', 'warning');
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('report_type', selectedReportType);
-            formData.append('period', selectedPeriod);
+            if (!Security.isValidEmail(email)) {
+                Toast.show('Введите корректный email', 'error');
+                return;
+            }
 
-            showLoading(true);
+            Loading.show('Вход в систему...');
 
             try {
-                const response = await fetch(`${API_URL}/reports/upload`, {
+                const response = await fetchAPI('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                    skipAuth: true
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    state.token = data.access_token;
+                    state.currentUser = data.user;
+                    
+                    Cookies.set('auth_token', data.access_token, 7);
+                    localStorage.setItem('token', data.access_token);
+                    
+                    Toast.show('Успешный вход!', 'success');
+                    render();
+                } else {
+                    Toast.show(data.detail || 'Неверный email или пароль', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+            } finally {
+                Loading.hide();
+            }
+        }
+
+        function logout() {
+            state.token = null;
+            state.currentUser = null;
+            Cookies.delete('auth_token');
+            localStorage.removeItem('token');
+            render();
+        }
+
+        async function fetchCurrentUser() {
+            try {
+                const response = await fetchAPI('/auth/me');
+                if (response.ok) {
+                    state.currentUser = await response.json();
+                    return true;
+                }
+            } catch (error) {
+                console.error('Fetch user error:', error);
+            }
+            return false;
+        }
+
+        function setTheme(theme) {
+            state.theme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        function toggleTheme() {
+            setTheme(state.theme === 'dark' ? 'light' : 'dark');
+            render();
+        }
+
+        const REPORT_TYPES = [
+            { id: 'schedule', icon: '📅', title: 'Расписание', desc: 'Кол-во пар по дисциплинам' },
+            { id: 'topics', icon: '📝', title: 'Темы занятий', desc: 'Проверка формата записи' },
+            { id: 'students', icon: '👥', title: 'Студенты', desc: 'ДЗ=1 или кл.работа<3' },
+            { id: 'attendance', icon: '📊', title: 'Посещаемость', desc: 'Преподаватели <40%' },
+            { id: 'homework', icon: '📚', title: 'Проверка ДЗ', desc: 'Преподаватели <70%' },
+            { id: 'student_homework', icon: '✅', title: 'Сдача ДЗ', desc: 'Студенты <70%' }
+        ];
+
+        const REPORT_LABELS = {
+            schedule: 'Расписание: кол-во пар по дисциплинам',
+            topics: 'Темы занятий: проверка формата',
+            students: 'Студенты: ДЗ=1 или кл.работа<3',
+            attendance: 'Посещаемость: преподаватели <40%',
+            homework: 'Проверка ДЗ: преподаватели <70%',
+            student_homework: 'Сдача ДЗ: студенты <70%'
+        };
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (!state.token) {
+                app.innerHTML = renderLoginPage();
+                attachLoginListeners();
+            } else {
+                app.innerHTML = renderMainApp();
+                attachMainListeners();
+                applyAnimationDelays(app);
+                
+                if (!state.currentUser) {
+                    fetchCurrentUser().then(() => {
+                        if (state.currentUser) {
+                            render();
+                        } else {
+                            logout();
+                        }
+                    });
+                } else {
+                    loadPageData();
+                }
+            }
+            
+            document.documentElement.setAttribute('data-theme', state.theme);
+        }
+
+        function renderLoginPage() {
+            return `
+                <div class="login-container">
+                    <div class="login-box">
+                        <div class="login-header">
+                            <div class="login-logo">📊</div>
+                            <h1 class="login-title">Academic Reports</h1>
+                            <p class="login-subtitle">Войдите в систему</p>
+                        </div>
+                        <form id="login-form">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" id="login-email" class="form-input" placeholder="admin@example.com" required autocomplete="email">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Пароль</label>
+                                <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                                Войти
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMainApp() {
+            const user = state.currentUser;
+            const initials = user ? user.email.substring(0, 2).toUpperCase() : '??';
+            const roleName = user?.role === 'admin' ? 'Администратор' : 'Модератор';
+
+            return `
+                <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+                <div class="mobile-header">
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <span class="logo-text">Academic Reports</span>
+                </div>
+                <div class="app">
+                    <aside class="sidebar">
+                        <div class="sidebar-header">
+                            <div class="sidebar-logo">
+                                <div class="logo-icon">📊</div>
+                                <span class="logo-text">Academic Reports</span>
+                            </div>
+                        </div>
+                        
+                        ${user ? `
+                        <div class="sidebar-user">
+                            <div class="user-avatar">${Security.escapeHtml(initials)}</div>
+                            <div class="user-email">${Security.escapeHtml(user.email)}</div>
+                            <div class="user-role">
+                                ${user.role === 'admin' ? '👑' : '👤'} ${Security.escapeHtml(roleName)}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <nav class="sidebar-nav">
+                            <div class="nav-section">Отчеты</div>
+                            <div class="nav-item ${state.currentPage === 'reports' ? 'active' : ''}" data-page="reports">
+                                <span class="nav-icon">📊</span>
+                                <span>Создать отчет</span>
+                            </div>
+                            <div class="nav-item ${state.currentPage === 'history' ? 'active' : ''}" data-page="history">
+                                <span class="nav-icon">📜</span>
+                                <span>История</span>
+                            </div>
+                            
+                            ${user?.role === 'admin' || user?.role === 'moderator' ? `
+                            <div class="nav-section">Управление</div>
+                            <div class="nav-item ${state.currentPage === 'users' ? 'active' : ''}" data-page="users">
+                                <span class="nav-icon">👥</span>
+                                <span>Пользователи</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${user?.role === 'admin' ? `
+                            <div class="nav-item ${state.currentPage === 'requests' ? 'active' : ''}" data-page="requests">
+                                <span class="nav-icon">📋</span>
+                                <span>Запросы</span>
+                            </div>
+                            ` : ''}
+                        </nav>
+                        
+                        <div class="sidebar-footer">
+                            <div class="theme-toggle">
+                                <span>Тёмная тема</span>
+                                <div class="toggle-switch ${state.theme === 'dark' ? 'active' : ''}" onclick="toggleTheme()"></div>
+                            </div>
+                            <button class="logout-btn" onclick="logout()">
+                                <span>🚪</span>
+                                Выйти
+                            </button>
+                        </div>
+                    </aside>
+                    
+                    <main class="main-content">
+                        ${renderPage()}
+                    </main>
+                </div>
+            `;
+        }
+
+        function renderPage() {
+            switch (state.currentPage) {
+                case 'reports': return renderReportsPage();
+                case 'history': return renderHistoryPage();
+                case 'users': return renderUsersPage();
+                case 'requests': return renderRequestsPage();
+                default: return renderReportsPage();
+            }
+        }
+
+        function renderReportsPage() {
+            return `
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Создать отчет</h1>
+                        <p class="page-subtitle">Выберите тип отчета и загрузите файл Excel</p>
+                    </div>
+                </div>
+                
+                <div class="reports-grid">
+                    ${REPORT_TYPES.map((type, index) => `
+                        <div class="report-card ${state.selectedReportType === type.id ? 'active' : ''}"
+                             data-report-type="${type.id}"
+                             data-delay="${index * 0.05}">
+                            <div class="report-icon">${type.icon}</div>
+                            <div class="report-title">${Security.escapeHtml(type.title)}</div>
+                            <div class="report-desc">${Security.escapeHtml(type.desc)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${state.selectedReportType ? `
+                    ${state.selectedReportType === 'homework' ? `
+                        <div class="period-selector">
+                            <button class="period-btn ${state.selectedPeriod === 'week' ? 'active' : ''}" data-period="week">Неделя</button>
+                            <button class="period-btn ${state.selectedPeriod === 'month' ? 'active' : ''}" data-period="month">Месяц</button>
+                            <button class="period-btn ${state.selectedPeriod === 'semester' ? 'active' : ''}" data-period="semester">Семестр</button>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="upload-area" id="upload-area">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-title">Перетащите файл сюда</div>
+                        <div class="upload-hint">или нажмите для выбора файла (.xlsx, .xls)</div>
+                        <input type="file" id="file-input" accept=".xlsx,.xls" style="display: none;">
+                    </div>
+                ` : `
+                    <div class="card">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👆</div>
+                            <div class="empty-state-title">Выберите тип отчета</div>
+                            <div class="empty-state-desc">Нажмите на одну из карточек выше</div>
+                        </div>
+                    </div>
+                `}
+                
+                <div id="result-container"></div>
+            `;
+        }
+
+        function applyAnimationDelays(root = document) {
+            root.querySelectorAll('[data-delay]').forEach(el => {
+                const delay = Number.parseFloat(el.dataset.delay);
+                if (!Number.isFinite(delay)) return;
+                el.style.animationDelay = `${delay}s`;
+            });
+        }
+
+        function renderHistoryPage() {
+            return `
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">История отчетов</h1>
+                        <p class="page-subtitle">Просмотр ранее созданных отчетов</p>
+                    </div>
+                </div>
+                
+                <div id="history-list">
+                    <div class="card">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                        <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderUsersPage() {
+            return `
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Пользователи</h1>
+                        <p class="page-subtitle">Управление пользователями системы</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="showCreateUserModal()">
+                        <span>➕</span> Добавить
+                    </button>
+                </div>
+                
+                <div id="users-list">
+                    ${renderSkeletonUsers()}
+                </div>
+            `;
+        }
+
+        function renderRequestsPage() {
+            return `
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Запросы на удаление</h1>
+                        <p class="page-subtitle">Одобрение запросов от модераторов</p>
+                    </div>
+                </div>
+                
+                <div id="requests-list">
+                    ${renderSkeletonUsers()}
+                </div>
+            `;
+        }
+
+        function renderSkeletonUsers() {
+            return Array(3).fill(0).map(() => `
+                <div class="user-item" style="animation: none;">
+                    <div class="user-info">
+                        <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                        <div>
+                            <div class="skeleton skeleton-text" style="width: 150px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 100px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function attachLoginListeners() {
+            const form = document.getElementById('login-form');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const email = document.getElementById('login-email').value.trim();
+                    const password = document.getElementById('login-password').value;
+                    await login(email, password);
+                });
+            }
+        }
+
+        function attachMainListeners() {
+            document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+                item.addEventListener('click', () => {
+                    state.currentPage = item.dataset.page;
+                    state.sidebarOpen = false;
+                    render();
+                });
+            });
+
+            document.querySelectorAll('.report-card[data-report-type]').forEach(card => {
+                card.addEventListener('click', () => {
+                    state.selectedReportType = card.dataset.reportType;
+                    render();
+                });
+            });
+
+            document.querySelectorAll('.period-btn[data-period]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.selectedPeriod = btn.dataset.period;
+                    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+
+            if (uploadArea && fileInput) {
+                uploadArea.addEventListener('click', () => fileInput.click());
+                
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const file = e.dataTransfer.files[0];
+                    if (file) handleFileUpload(file);
+                });
+
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) handleFileUpload(file);
+                });
+            }
+        }
+
+        function loadPageData() {
+            switch (state.currentPage) {
+                case 'history':
+                    loadHistory();
+                    break;
+                case 'users':
+                    loadUsers();
+                    break;
+                case 'requests':
+                    loadDeleteRequests();
+                    break;
+            }
+        }
+
+        async function handleFileUpload(file) {
+            if (!state.selectedReportType) {
+                Toast.show('Сначала выберите тип отчета', 'warning');
+                return;
+            }
+
+            const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+            if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls)$/i)) {
+                Toast.show('Поддерживаются только файлы Excel (.xlsx, .xls)', 'error');
+                return;
+            }
+
+            Loading.show('Обработка файла...');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('report_type', state.selectedReportType);
+            formData.append('period', state.selectedPeriod);
+
+            try {
+                const response = await fetchAPI('/reports/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -1047,424 +2104,1149 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    currentReport = data;
-                    displayResult(data);
-                    showToast('Отчет успешно обработан', 'success');
-                    loadHistory();
+                    Toast.show('Отчет успешно создан!', 'success');
+                    renderReportResult(data);
                 } else {
-                    showToast(data.detail || 'Ошибка обработки файла', 'error');
+                    Toast.show(data.detail || 'Ошибка обработки файла', 'error');
                 }
             } catch (error) {
-                showToast('Ошибка подключения к серверу', 'error');
+                console.error('Upload error:', error);
             } finally {
-                showLoading(false);
+                Loading.hide();
+            }
+        }
+		
+		const ReportFilters = {
+			currentData: [],
+			filteredData: [],
+			searchQuery: '',
+			columnFilters: {},
+			
+			init(data) {
+				this.currentData = data;
+				this.filteredData = [...data];
+				this.searchQuery = '';
+				this.columnFilters = {};
+			},
+			
+			search(query) {
+				this.searchQuery = query.toLowerCase();
+				this.applyFilters();
+			},
+			
+			filterColumn(column, value) {
+				if (value === 'all' || value === '') {
+					delete this.columnFilters[column];
+				} else {
+					this.columnFilters[column] = value;
+				}
+				this.applyFilters();
+			},
+			
+			applyFilters() {
+				this.filteredData = this.currentData.filter(item => {
+					if (this.searchQuery) {
+						const searchableText = Object.values(item)
+							.filter(val => val !== null && val !== undefined)
+							.join(' ')
+							.toLowerCase();
+						
+						if (!searchableText.includes(this.searchQuery)) {
+							return false;
+						}
+					}
+					
+					for (const [column, filterValue] of Object.entries(this.columnFilters)) {
+						const itemValue = String(item[column] || '').toLowerCase();
+						const filter = String(filterValue).toLowerCase();
+						
+						if (!itemValue.includes(filter)) {
+							return false;
+						}
+					}
+					
+					return true;
+				});
+			},
+			
+			reset() {
+				this.searchQuery = '';
+				this.columnFilters = {};
+				this.filteredData = [...this.currentData];
+			}
+        };
+
+		function generateFilterPanel(reportType) {
+			const panelId = `filter-panel-${Date.now()}`;
+			
+			return `
+				<div id="${panelId}" class="filter-panel" style="
+					background: var(--bg-card);
+					border: 1px solid var(--border);
+					border-radius: var(--radius-lg);
+					padding: 1.25rem;
+					margin-bottom: 1.5rem;
+					animation: slideDown 0.3s ease;
+				">
+					<div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+						<div style="flex: 1; min-width: 250px;">
+							<div style="position: relative;">
+								<input 
+									type="text" 
+									id="search-input-${panelId}"
+									class="form-input" 
+									placeholder="🔍 Поиск по темам..."
+									style="width: 100%; padding-right: 2.5rem;"
+									oninput="handleSearch(this.value, '${reportType}')"
+								>
+								<button 
+									onclick="clearSearch('${panelId}', '${reportType}')"
+									style="
+										position: absolute;
+										right: 0.5rem;
+										top: 50%;
+										transform: translateY(-50%);
+										background: none;
+										border: none;
+										color: var(--text-muted);
+										cursor: pointer;
+										padding: 0.25rem;
+										font-size: 1.125rem;
+										display: none;
+									"
+									id="clear-search-${panelId}"
+								>✕</button>
+							</div>
+						</div>
+						
+						<div id="results-count-${panelId}" style="
+							color: var(--text-secondary);
+							font-size: 0.875rem;
+							white-space: nowrap;
+						">
+							Найдено: <strong id="filtered-count-${panelId}">0</strong> из <strong id="total-count-${panelId}">0</strong>
+						</div>
+					</div>
+					
+					<div id="column-filters-${panelId}" style="
+						display: flex;
+						gap: 0.75rem;
+						margin-top: 1rem;
+						flex-wrap: wrap;
+						display: none;
+					"></div>
+				</div>
+			`;
+		}
+
+        function handleSearch(query, reportType) {
+			ReportFilters.search(query);
+			rerenderReport(reportType);
+			updateFilterUI();
+		}
+
+        function clearSearch(panelId, reportType) {
+			const input = document.getElementById(`search-input-${panelId}`);
+			if (input) {
+				input.value = '';
+				handleSearch('', reportType);
+			}
+		}
+
+		function resetAllFilters(panelId, reportType) {
+			const searchInput = document.getElementById(`search-input-${panelId}`);
+			if (searchInput) searchInput.value = '';
+			
+			const filters = document.querySelectorAll(`[id^="filter-"][id*="${panelId}"]`);
+			filters.forEach(filter => {
+				if (filter.tagName === 'SELECT') {
+					filter.value = 'all';
+				}
+			});
+			
+			ReportFilters.reset();
+			rerenderReport(reportType);
+			updateFilterUI();
+		}
+
+		function updateFilterUI() {
+			const panel = document.querySelector('.filter-panel');
+			if (!panel) return;
+			
+			const panelId = panel.id;
+			
+			const filteredCount = document.getElementById(`filtered-count-${panelId}`);
+			const totalCount = document.getElementById(`total-count-${panelId}`);
+			const clearSearchBtn = document.getElementById(`clear-search-${panelId}`);
+			const resetBtn = document.getElementById(`reset-btn-${panelId}`);
+			const searchInput = document.getElementById(`search-input-${panelId}`);
+			
+			if (filteredCount) {
+				filteredCount.textContent = ReportFilters.filteredData.length;
+			}
+
+			if (totalCount) {
+				totalCount.textContent = ReportFilters.currentData.length;
+			}
+			
+			if (clearSearchBtn && searchInput) {
+				clearSearchBtn.style.display = searchInput.value ? 'block' : 'none';
+			}
+			
+			const hasFilters = ReportFilters.searchQuery || Object.keys(ReportFilters.columnFilters).length > 0;
+			if (resetBtn) {
+				resetBtn.style.display = hasFilters ? 'block' : 'none';
+			}
+		}
+
+        function rerenderReport(reportType) {
+            const container = document.getElementById('result-container');
+            if (!container) return;
+
+            if (reportType === 'topics') {
+                const data = ReportFilters.filteredData || [];
+
+                const filteredValid = data.filter(e => e.__topic_section === 'valid');
+                const filteredInvalid = data.filter(e => e.__topic_section === 'invalid');
+
+                const validBox = container.querySelector('.table-container[data-topics-section="valid"]');
+                const invalidBox = container.querySelector('.table-container[data-topics-section="invalid"]');
+
+                if (validBox) validBox.innerHTML = renderTopicsTable(filteredValid, 'valid');
+                if (invalidBox) invalidBox.innerHTML = renderTopicsTable(filteredInvalid, 'invalid');
+
+                return;
+            }
+
+
+            const tableContainer = container.querySelector('.table-container');
+            if (!tableContainer) return;
+
+            const data = ReportFilters.filteredData;
+
+            let newTable = '';
+            if (reportType === 'teachers' || reportType === 'homework' || reportType === 'attendance') {
+                newTable = renderTeachersTable(data);
+            } else if (reportType === 'students') {
+                newTable = renderStudentsTable(data);
+            } else if (reportType === 'student_homework') {
+                newTable = renderStudentHomeworkTable(data);
+            }
+
+            if (newTable) {
+                tableContainer.innerHTML = newTable;
             }
         }
 
-        function displayResult(data) {
-            const resultContent = document.getElementById('result-content');
+		function renderTeachersTable(teachers) {
+			return `
+				<table>
+					<thead>
+						<tr>
+							<th>Преподаватель</th>
+							<th>Статус</th>
+							<th>Детали</th>
+						</tr>
+					</thead>
+					<tbody>
+						${teachers.length === 0 ? `
+							<tr>
+								<td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+									<div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+									<div>Ничего не найдено</div>
+								</td>
+							</tr>
+						` : teachers.map((t, idx) => `
+							<tr style="animation: slideUp 0.2s ease both; animation-delay: ${idx * 0.02}s;">
+								<td><strong>${Security.escapeHtml(t.name || t.teacher)}</strong></td>
+								<td>
+									<span class="badge ${t.status === 'valid' || t.status === 'ok' ? 'badge-success' : t.status === 'warning' ? 'badge-warning' : 'badge-danger'}">
+										${t.status === 'valid' || t.status === 'ok' ? '✓ Верно' : t.status === 'warning' ? '⚠ Внимание' : '✕ Ошибка'}
+									</span>
+								</td>
+								<td class="text-muted">
+									${t.message || t.details || 
+									  (t.check_percent !== undefined ? 
+										`Проверено ${t.checked} из ${t.issued} (${t.check_percent}%)` : 
+										'-')}
+								</td>
+							</tr>
+						`).join('')}
+					</tbody>
+				</table>
+			`;
+		}
+
+		function renderStudentsTable(students) {
+			return `
+				<table>
+					<thead>
+						<tr>
+							<th>Студент</th>
+							<th>Оценка за ДЗ</th>
+							<th>Оценка за кл. работу</th>
+							<th>Проблемы</th>
+						</tr>
+					</thead>
+					<tbody>
+						${students.length === 0 ? `
+							<tr>
+								<td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+									<div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+									<div>Ничего не найдено</div>
+								</td>
+							</tr>
+						` : students.map((s, idx) => `
+							<tr style="animation: slideUp 0.2s ease both; animation-delay: ${idx * 0.02}s;">
+								<td><strong>${Security.escapeHtml(s.name || s.student)}</strong></td>
+								<td style="text-align: center;">
+									${s.hw_grade !== null && s.hw_grade !== undefined ?
+										`<span class="badge ${s.hw_grade === 1 ? 'badge-danger' : s.hw_grade < 3 ? 'badge-warning' : 'badge-success'}">${s.hw_grade}</span>` :
+										'<span class="text-muted">—</span>'}
+								</td>
+								<td style="text-align: center;">
+									${s.class_grade !== null && s.class_grade !== undefined ?
+										`<span class="badge ${s.class_grade < 3 ? 'badge-danger' : s.class_grade < 4 ? 'badge-warning' : 'badge-success'}">${s.class_grade}</span>` :
+										'<span class="text-muted">—</span>'}
+								</td>
+								<td style="font-size: 0.875rem;">
+									${s.issues && s.issues.length > 0 ?
+										s.issues.map(issue => `
+											<div style="padding: 0.25rem 0.5rem; border-left: 3px solid var(--danger); margin: 0.25rem 0; background: var(--danger-bg); border-radius: 0 4px 4px 0;">
+												⚠️ ${Security.escapeHtml(issue)}
+											</div>
+										`).join('') :
+										'<span class="text-muted">Нет проблем</span>'}
+								</td>
+							</tr>
+						`).join('')}
+					</tbody>
+				</table>
+			`;
+		}
+
+		function renderStudentHomeworkTable(students) {
+			return `
+				<table>
+					<thead>
+						<tr>
+							<th>Студент</th>
+							<th>% сдачи ДЗ</th>
+							</tr>
+					</thead>
+					<tbody>
+						${students.length === 0 ? `
+							<tr>
+								<td colspan="2" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+									<div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+									<div>Ничего не найдено</div>
+								</td>
+							</tr>
+						` : students.map((s, idx) => `
+							<tr style="animation: slideUp 0.2s ease both; animation-delay: ${idx * 0.02}s;">
+								<td><strong>${Security.escapeHtml(s.name)}</strong></td>
+								<td style="text-align: center;">
+									<span class="badge ${s.completion_percent < 50 ? 'badge-danger' : 'badge-warning'}">${s.completion_percent}%</span>
+								</td>
+							</tr>
+						`).join('')}
+					</tbody>
+				</table>
+			`;
+		}
+
+        function renderReportResult(data) {
+            const container = document.getElementById('result-container');
+            if (!container) return;
+
             const result = data.result;
-
             let html = `
-                <div class="result-header">
-                    <h2 class="result-title">${result.title || 'Результат анализа'}</h2>
-                    <div class="result-meta">
-                        <div class="meta-item">
-                            <span>📄</span>
-                            <span>${data.filename}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span>🕐</span>
-                            <span>${new Date(data.timestamp).toLocaleString('ru-RU')}</span>
-                        </div>
-                        <span class="meta-badge">${getReportTypeLabel(data.report_type)}</span>
+                <div class="card mt-4" style="animation-delay: 0.1s;">
+                    <div class="card-header">
+                        <h3 class="card-title">${Security.escapeHtml(data.report_label || REPORT_LABELS[data.report_type])}</h3>
+                        <span class="badge badge-success">Готово</span>
                     </div>
-                </div>
             `;
-
-            if (result.description) {
-                html += `<p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">${result.description}</p>`;
-            }
 
             if (result.stats) {
-                html += '<div class="stats-grid">';
-                if (result.stats.valid_count !== undefined) {
+                html += `<div class="stats-grid">`;
+                Object.entries(result.stats).forEach(([key, value]) => {
+                    const labels = {
+                        total_found: 'Всего найдено',
+                        total_pairs: 'Всего пар',
+                        valid_count: 'Верных',
+                        invalid_count: 'Неверных',
+                        warning_count: 'Предупреждений',
+                        total_students: 'Студентов',
+                        total_teachers: 'Преподавателей'
+                    };
                     html += `
                         <div class="stat-card">
-                            <div class="stat-label">Корректные записи</div>
-                            <div class="stat-value">${result.stats.valid_count}</div>
+                            <div class="stat-label">${Security.escapeHtml(labels[key] || key)}</div>
+                            <div class="stat-value">${Security.escapeHtml(String(value))}</div>
                         </div>
                     `;
-                }
-                if (result.stats.invalid_count !== undefined) {
-                    html += `
-                        <div class="stat-card">
-                            <div class="stat-label">Проблемные записи</div>
-                            <div class="stat-value" style="background: var(--gradient-accent);">${result.stats.invalid_count}</div>
-                        </div>
-                    `;
-                }
-                if (result.total_pairs !== undefined) {
-                    html += `
-                        <div class="stat-card">
-                            <div class="stat-label">Всего пар</div>
-                            <div class="stat-value">${result.total_pairs}</div>
-                        </div>
-                    `;
-                }
-                if (result.groups && result.groups.length > 0) {
-                    html += `
-                        <div class="stat-card">
-                            <div class="stat-label">Групп</div>
-                            <div class="stat-value" style="background: var(--gradient-accent);">${result.groups.length}</div>
-                        </div>
-                    `;
-                }
-                html += '</div>';
+                });
+                html += `</div>`;
             }
 
-            if (data.report_type === 'schedule' && !result.stats && result.groups) {
-                html += '<div class="stats-grid">';
-                html += `
-                    <div class="stat-card">
-                        <div class="stat-label">Всего пар</div>
-                        <div class="stat-value">${result.total_pairs}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Групп</div>
-                        <div class="stat-value" style="background: var(--gradient-accent);">${result.groups.length}</div>
-                    </div>
-                `;
-                html += '</div>';
+            if (data.report_type === 'topics') {
+                const validRaw = Array.isArray(result.valid) ? result.valid : [];
+                const invalidRaw = Array.isArray(result.invalid) ? result.invalid : [];
+
+                const valid = validRaw.map(e => ({ ...e, __topic_section: 'valid' }));
+                const invalid = invalidRaw.map(e => ({ ...e, __topic_section: 'invalid' }));
+                const all = [...valid, ...invalid];
+
+                ReportFilters.init(all);
+
+                html += generateFilterPanel('topics');
+
+                if (valid.length > 0) {
+                    html += '<h3 style="color: var(--success); margin: 1.5rem 0 1rem; font-size: 1.25rem;">✓ Верные темы (правильный формат)</h3>';
+                    html += renderTopicsSection(valid, 'valid');
+                }
+
+                if (invalid.length > 0) {
+                    html += '<h3 style="color: var(--danger); margin: 1.5rem 0 1rem; font-size: 1.25rem;">✕ Неверные темы (требуют исправления)</h3>';
+                    html += renderTopicsSection(invalid, 'invalid');
+                }
             }
 
-            if (data.report_type === 'schedule' && result.groups) {
-                html += renderScheduleTable(result.groups);
-            } else if (data.report_type === 'topics') {
-                if (result.invalid && result.invalid.length > 0) {
-                    html += renderTopicsTable(result.invalid, true);
+            if (result.groups && result.groups.length > 0) {
+                html += renderGroupsData(result.groups);
+            } else if (result.teachers && result.teachers.length > 0) {
+                html += renderTeachersData(result.teachers);
+            } else if (result.students && result.students.length > 0) {
+                if (data.report_type === 'student_homework') {
+                    html += renderStudentHomeworkData(result.students);
+                } else {
+                    html += renderStudentsData(result.students);
                 }
-                if (result.valid && result.valid.length > 0) {
-                    html += renderTopicsTable(result.valid, false);
-                }
-            } else if (data.report_type === 'students' && result.students) {
-                html += renderStudentsTable(result.students);
-            } else if (data.report_type === 'attendance' && result.teachers) {
-                html += renderTeachersTable(result.teachers, 'attendance');
-            } else if (data.report_type === 'homework' && result.teachers) {
-                html += renderTeachersTable(result.teachers, 'homework');
-            } else if (data.report_type === 'student_homework' && result.students) {
-                html += renderStudentHomeworkTable(result.students);
+            } else if (result.entries && result.entries.length > 0) {
+                html += renderEntriesData(result.entries);
             }
 
-            resultContent.innerHTML = html;
-            switchTab('result');
+            html += `</div>`;
+            container.innerHTML = html;
+            requestAnimationFrame(updateFilterUI);
         }
 
-        function renderScheduleTable(groups) {
-            return groups.map(group => `
-                <div style="margin-bottom: var(--space-lg);">
-                    <h3 style="margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);">
-                        📚 ${group.name}
-                        <span class="badge badge-info">${group.total} пар</span>
-                    </h3>
-                    <div class="schedule-list">
-                        ${group.disciplines.map((d, idx) => `
-                            <div class="schedule-item" data-id="${group.name}-${idx}">
-                                <div class="schedule-header" onclick="toggleScheduleItem(this)">
-                                    <div class="schedule-info">
-                                        <span class="schedule-name">${d.name}</span>
+        function renderGroupsData(groups) {
+            return groups.map((group, groupIndex) => `
+                <div class="accordion-item" style="animation-delay: ${groupIndex * 0.05}s;">
+                    <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
+                        <div>
+                            <strong>${Security.escapeHtml(group.name)}</strong>
+                            <span class="badge badge-info" style="margin-left: 0.5rem;">${group.disciplines?.length || 0} дисциплин</span>
+                        </div>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body" style="padding-top: 1rem;">
+                            ${(group.disciplines || []).map((disc, discIndex) => `
+                                <div class="discipline-item" style="margin-bottom: 0.75rem;">
+                                    <div class="discipline-header" onclick="this.parentElement.classList.toggle('expanded')" 
+                                         style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-glass); border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition-fast);">
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <span style="font-size: 1.25rem;">📚</span>
+                                            <span style="font-weight: 500;">${Security.escapeHtml(disc.name || 'Без названия')}</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span class="badge badge-success">${disc.count || disc.occurrences?.length || 0} пар</span>
+                                            <span class="disc-icon" style="transition: transform 0.2s;">▶</span>
+                                        </div>
                                     </div>
-                                    <div class="schedule-toggle">
-                                        <span class="badge badge-info">${d.count}</span>
-                                        <span class="arrow">▼</span>
+                                    <div class="discipline-details" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
+                                        <div style="padding: 0.75rem; background: var(--bg-tertiary); border-radius: 0 0 var(--radius-sm) var(--radius-sm); margin-top: -4px;">
+                                            ${(disc.occurrences || []).map(occ => `
+                                                <div style="display: flex; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.875rem;">
+                                                    <span style="min-width: 100px; color: var(--accent-primary); font-weight: 500;">📅 ${Security.escapeHtml(occ.day || '')}</span>
+                                                    <span style="color: var(--text-secondary);">🕐 ${Security.escapeHtml(occ.time || '—')}</span>
+                                                </div>
+                                            `).join('')}
+                                            ${(!disc.occurrences || disc.occurrences.length === 0) ? '<p style="color: var(--text-muted); text-align: center; padding: 0.5rem;">Нет данных о времени</p>' : ''}
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="schedule-details">
-                                    <div class="schedule-details-inner">
-                                        ${d.occurrences.map(o => `
-                                            <div class="schedule-occurrence">
-                                                <span class="schedule-day">${o.day}</span>
-                                                <span class="schedule-time">${o.time}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            </div>
+                            `).join('')}
+                            ${(!group.disciplines || group.disciplines.length === 0) ? '<p style="color: var(--text-muted); text-align: center;">Нет дисциплин</p>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('') + `
+            <style>
+                .discipline-item.expanded .discipline-details { max-height: 500px !important; }
+                .discipline-item.expanded .disc-icon { transform: rotate(90deg); }
+                .discipline-header:hover { background: var(--bg-glass-hover) !important; }
+            </style>
+            `;
+        }
+
+        function renderTeachersData(teachers) {
+			ReportFilters.init(teachers);
+			
+			const panelId = `panel-${Date.now()}`;
+			
+			return `
+				${generateFilterPanel('teachers')}
+				
+				<div class="table-container">
+					<table>
+						<thead>
+							<tr>
+								<th style="width: 40%;">Преподаватель</th>
+								<th style="width: 20%; text-align: center;">Статус</th>
+								<th style="width: 40%;">Детали</th>
+							</tr>
+						</thead>
+						<tbody>
+							${teachers.slice(0, 100).map((t, idx) => `
+								<tr style="animation: slideUp 0.3s ease both; animation-delay: ${idx * 0.02}s;">
+									<td><strong>${Security.escapeHtml(t.name || t.teacher)}</strong></td>
+									<td style="text-align: center;">
+										<span class="badge ${t.status === 'valid' || t.status === 'ok' ? 'badge-success' : t.status === 'warning' ? 'badge-warning' : 'badge-danger'}">
+											${t.status === 'valid' || t.status === 'ok' ? '✓ Верно' : t.status === 'warning' ? '⚠ Внимание' : '✕ Ошибка'}
+										</span>
+									</td>
+									<td class="text-muted">
+										${t.message || t.details || 
+										  (t.check_percent !== undefined ? 
+											`Проверено ${t.checked} из ${t.issued} (${t.check_percent}%)` : 
+											'-')}
+									</td>
+								</tr>
+							`).join('')}
+						</tbody>
+					</table>
+				</div>
+				${teachers.length > 100 ? `<p class="text-muted text-center mt-3">Показано 100 из ${teachers.length}</p>` : ''}
+			`;
+		}
+
+        function renderStudentsData(students) {
+			ReportFilters.init(students);
+			
+			return `
+				${generateFilterPanel('students')}
+				
+				<div class="table-container">
+					<table>
+						<thead>
+							<tr>
+								<th style="width: 35%;">Студент</th>
+								<th style="width: 15%; text-align: center;">Оценка за ДЗ</th>
+								<th style="width: 15%; text-align: center;">Оценка за кл. работу</th>
+								<th style="width: 35%;">Проблемы</th>
+							</tr>
+						</thead>
+						<tbody>
+							${students.slice(0, 100).map((s, idx) => `
+								<tr style="animation: slideUp 0.3s ease both; animation-delay: ${idx * 0.02}s;">
+									<td>
+										<strong style="color: var(--text-primary);">${Security.escapeHtml(s.name || s.student)}</strong>
+									</td>
+									<td style="text-align: center;">
+										${s.hw_grade !== null && s.hw_grade !== undefined ? 
+											`<span class="badge ${s.hw_grade === 1 ? 'badge-danger' : s.hw_grade < 3 ? 'badge-warning' : 'badge-success'}" 
+												   style="font-size: 0.875rem; min-width: 40px; display: inline-block;">
+												${s.hw_grade}
+											</span>` : 
+											'<span class="text-muted">—</span>'}
+									</td>
+									<td style="text-align: center;">
+										${s.class_grade !== null && s.class_grade !== undefined ? 
+											`<span class="badge ${s.class_grade < 3 ? 'badge-danger' : s.class_grade < 4 ? 'badge-warning' : 'badge-success'}"
+												   style="font-size: 0.875rem; min-width: 40px; display: inline-block;">
+												${s.class_grade}
+											</span>` : 
+											'<span class="text-muted">—</span>'}
+									</td>
+									<td style="font-size: 0.875rem;">
+										${s.issues && s.issues.length > 0 ? 
+											s.issues.map(issue => `
+												<div style="
+													padding: 0.375rem 0.5rem; 
+													border-left: 3px solid var(--danger); 
+													margin: 0.25rem 0;
+													background: var(--danger-bg);
+													border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+													color: var(--text-secondary);
+												">
+													⚠️ ${Security.escapeHtml(issue)}
+												</div>
+											`).join('') : 
+											'<span class="text-muted">Нет проблем</span>'}
+									</td>
+								</tr>
+							`).join('')}
+						</tbody>
+					</table>
+				</div>
+				${students.length > 100 ? `
+					<div style="background: var(--info-bg); border: 1px solid var(--info); border-radius: var(--radius-md); padding: 1rem; margin-top: 1rem; text-align: center;">
+						<span style="font-size: 1.25rem;">ℹ️</span>
+						<strong style="color: var(--info); margin-left: 0.5rem;">
+							Показано первых 100 студентов из ${students.length}
+						</strong>
+					</div>
+				` : ''}
+			`;
+		}
+
+        function renderStudentHomeworkData(students) {
+			ReportFilters.init(students);
+
+			return `
+				${generateFilterPanel('student_homework')}
+
+				<div class="table-container">
+					<table>
+						<thead>
+							<tr>
+								<th style="width: 60%;">Студент</th>
+								<th style="width: 40%; text-align: center;">% сдачи ДЗ</th>
+							</tr>
+						</thead>
+						<tbody>
+							${students.slice(0, 100).map((s, idx) => `
+								<tr style="animation: slideUp 0.3s ease both; animation-delay: ${idx * 0.02}s;">
+									<td>
+										<strong style="color: var(--text-primary);">${Security.escapeHtml(s.name)}</strong>
+									</td>
+									<td style="text-align: center;">
+										<span class="badge ${s.completion_percent < 50 ? 'badge-danger' : 'badge-warning'}"
+											   style="font-size: 0.875rem; min-width: 50px; display: inline-block;">
+											${s.completion_percent}%
+										</span>
+									</td>
+								</tr>
+							`).join('')}
+						</tbody>
+					</table>
+				</div>
+			`;
+		}
+
+        function renderEntriesData(entries) {
+            return `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Запись</th>
+                                <th>Статус</th>
+                                <th>Сообщение</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${entries.slice(0, 50).map(e => `
+                                <tr>
+                                    <td>${Security.escapeHtml(e.title || e.name || 'Без названия')}</td>
+                                    <td>
+                                        <span class="badge ${e.status === 'valid' ? 'badge-success' : e.status === 'warning' ? 'badge-warning' : 'badge-danger'}">
+                                            ${e.status === 'valid' ? '✓' : e.status === 'warning' ? '⚠' : '✕'}
+                                        </span>
+                                    </td>
+                                    <td class="text-muted">${Security.escapeHtml(e.message || '-')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderTopicsTable(entries, type) {
+            const rows = entries.slice(0, 100);
+
+            return `
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50%;">Текст темы</th>
+                            <th style="width: 15%; text-align: center;">Количество</th>
+                            <th style="width: 35%;">Позиции в файле</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows.length === 0 ? `
+                            <tr>
+                                <td colspan="3" style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                                    Ничего не найдено
+                                </td>
+                            </tr>
+                        ` : rows.map((entry, idx) => `
+                            <tr style="animation: slideUp 0.3s ease both; animation-delay: ${idx * 0.02}s;">
+                                <td style="max-width: 500px; word-wrap: break-word;">
+                                    <strong style="color: var(--text-primary);">${Security.escapeHtml(entry.text)}</strong>
+                                    ${entry.reason ? `
+                                        <br>
+                                        <small style="color: var(--text-muted); font-style: italic; margin-top: 0.25rem; display: block;">
+                                            ⚠️ ${Security.escapeHtml(entry.reason)}
+                                        </small>
+                                    ` : ''}
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="badge ${type === 'valid' ? 'badge-success' : 'badge-danger'}" style="font-size: 0.875rem;">
+                                        ${entry.count} ${entry.count === 1 ? 'раз' : entry.count < 5 ? 'раза' : 'раз'}
+                                    </span>
+                                </td>
+                                <td style="font-size: 0.8125rem; line-height: 1.8; color: var(--text-muted);">
+                                    ${entry.occurrences ? entry.occurrences.slice(0, 5).map(occ => `
+                                        <div style="padding: 0.125rem 0;">
+                                            📍 Строка <strong style="color: var(--accent-primary);">${occ.row}</strong>,
+                                            столбец "${Security.escapeHtml(occ.column)}"
+                                        </div>
+                                    `).join('') : '<span style="color: var(--text-muted);">—</span>'}
+                                    ${entry.occurrences && entry.occurrences.length > 5 ? `
+                                        <div style="color: var(--accent-primary); font-weight: 500; margin-top: 0.25rem;">
+                                            📋 ...и еще ${entry.occurrences.length - 5} вхождений
+                                        </div>
+                                    ` : ''}
+                                </td>
+                            </tr>
                         `).join('')}
+                    </tbody>
+                </table>
+                ${entries.length > 100 ? `
+                    <div style="background: var(--info-bg); border: 1px solid var(--info); border-radius: var(--radius-md); padding: 1rem; margin-top: 1rem; text-align: center;">
+                        <span style="font-size: 1.25rem;">ℹ️</span>
+                        <strong style="color: var(--info); margin-left: 0.5rem;">Показано первых 100 записей из ${entries.length}</strong>
+                        <br>
+                        <span style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem; display: inline-block;">
+                            Всего найдено <strong>${entries.reduce((sum, e) => sum + (e.count || 0), 0)}</strong> вхождений в файле
+                        </span>
                     </div>
-                </div>
-            `).join('');
-        }
-
-        function toggleScheduleItem(header) {
-            const item = header.closest('.schedule-item');
-            item.classList.toggle('open');
-        }
-
-        function renderTopicsTable(data, isInvalid) {
-            const title = isInvalid ? '❌ Записи с проблемами' : '✅ Корректные записи';
-            const badgeClass = isInvalid ? 'badge-danger' : 'badge-success';
-            const itemClass = isInvalid ? 'topic-invalid' : 'topic-valid';
-
-            return `
-                <div style="margin-top: var(--space-lg);">
-                    <h3 style="margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);">
-                        ${title}
-                        <span class="badge ${badgeClass}">${data.reduce((sum, item) => sum + item.count, 0)}</span>
-                        <span style="color: var(--text-tertiary); font-size: 0.9rem; font-weight: normal;">(${data.length} уник.)</span>
-                    </h3>
-                    <div class="schedule-list">
-                        ${data.map((item, idx) => `
-                            <div class="schedule-item ${itemClass}" data-id="topic-${isInvalid ? 'inv' : 'val'}-${idx}">
-                                <div class="schedule-header" onclick="toggleScheduleItem(this)">
-                                    <div class="schedule-info" style="flex: 1; min-width: 0;">
-                                        <span class="schedule-name" style="word-break: break-word;">${item.text}</span>
-                                    </div>
-                                    <div class="schedule-toggle">
-                                        <span class="badge ${badgeClass}">${item.count}</span>
-                                        <span class="arrow">▼</span>
-                                    </div>
-                                </div>
-                                <div class="schedule-details">
-                                    <div class="schedule-details-inner">
-                                        ${isInvalid ? `<div style="color: var(--danger); margin-bottom: var(--space-sm); font-size: 0.85rem;">⚠️ ${item.reason}</div>` : ''}
-                                        ${item.occurrences.map(o => `
-                                            <div class="schedule-occurrence">
-                                                <span class="schedule-day">Строка ${o.row}</span>
-                                                <span class="schedule-time">${o.column}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
+                ` : ''}
             `;
         }
 
-        function renderStudentsTable(students) {
+        function renderTopicsSection(entries, type) {
             return `
-                <div style="border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ФИО студента</th>
-                                <th style="text-align: center;">Оценка ДЗ</th>
-                                <th style="text-align: center;">Классная работа</th>
-                                <th>Проблемы</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${students.map(s => `
-                                <tr>
-                                    <td>${s.name}</td>
-                                    <td style="text-align: center;">
-                                        ${s.hw_grade !== null ? `<span class="badge ${s.hw_grade === 1 ? 'badge-danger' : 'badge-info'}">${s.hw_grade}</span>` : '—'}
-                                    </td>
-                                    <td style="text-align: center;">
-                                        ${s.class_grade !== null ? `<span class="badge ${s.class_grade < 3 ? 'badge-danger' : 'badge-info'}">${s.class_grade}</span>` : '—'}
-                                    </td>
-                                    <td>${s.issues.map(i => `<span class="badge badge-danger">${i}</span>`).join(' ')}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                <div class="table-container" data-topics-section="${type}" style="margin-bottom: 2rem;">
+                    ${renderTopicsTable(entries, type)}
                 </div>
             `;
-        }
-
-        function renderTeachersTable(teachers, type) {
-            const metric = type === 'attendance' ? 'attendance' : 'check_percent';
-            const label = type === 'attendance' ? 'Посещаемость' : 'Процент проверки';
-            const showHomeworkDetails = type === 'homework';
-
-            return `
-                <div style="border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ФИО преподавателя</th>
-                                ${showHomeworkDetails ? '<th style="text-align: center; width: 150px;">Выдано/Проверено</th>' : ''}
-                                <th style="text-align: right; width: 200px;">${label}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${teachers.map(t => `
-                                <tr>
-                                    <td>${t.name}</td>
-                                    ${showHomeworkDetails ? `<td style="text-align: center;"><code>${t.issued || '—'}/${t.checked || '—'}</code></td>` : ''}
-                                    <td style="text-align: right;">
-                                        <span class="badge badge-warning">${t[metric].toFixed(1)}%</span>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        function renderStudentHomeworkTable(students) {
-            return `
-                <div style="border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ФИО студента</th>
-                                <th style="text-align: center;">% выполнения ДЗ</th>
-                                <th style="text-align: center;">Оценка за ДЗ</th>
-                                <th style="text-align: center;">Статус</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${students.map(s => `
-                                <tr>
-                                    <td>${s.name}</td>
-                                    <td style="text-align: center;">
-                                        <span class="badge ${s.completion_percent < 50 ? 'badge-danger' : 'badge-warning'}">${s.completion_percent.toFixed(1)}%</span>
-                                    </td>
-                                    <td style="text-align: center;"><code>${s.hw_grade}</code></td>
-                                    <td style="text-align: center;">
-                                        <span class="badge ${s.status === 'критично' ? 'badge-danger' : 'badge-warning'}">${s.status}</span>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        function getReportTypeLabel(type) {
-            const labels = {
-                schedule: 'Расписание',
-                topics: 'Темы занятий',
-                students: 'Студенты',
-                attendance: 'Посещаемость',
-                homework: 'Проверка ДЗ',
-                student_homework: 'Сданные ДЗ'
-            };
-            return labels[type] || type;
-        }
-
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                switchTab(tab.dataset.tab);
-            });
-        });
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-
-            document.getElementById('result-content').classList.toggle('hidden', tabName !== 'result');
-            document.getElementById('history-content').classList.toggle('hidden', tabName !== 'history');
-
-            if (tabName === 'history') {
-                loadHistory();
-            }
         }
 
         async function loadHistory() {
             try {
-                const response = await fetch(`${API_URL}/reports/history`);
+                const response = await fetchAPI('/reports/history');
                 const data = await response.json();
 
-                const historyList = document.getElementById('history-list');
-                
+                const list = document.getElementById('history-list');
+                if (!list) return;
+
                 if (data.history && data.history.length > 0) {
-                    historyList.innerHTML = data.history.map(report => `
-                        <div class="history-item" onclick="viewReport('${report.id}')">
-                            <div class="history-info">
-                                <div class="history-title">${report.result?.title || getReportTypeLabel(report.report_type)}</div>
-                                <div class="history-meta">
-                                    <span>📄 ${report.filename}</span>
-                                    <span>🕐 ${new Date(report.timestamp).toLocaleString('ru-RU')}</span>
+                    list.innerHTML = data.history.map((item, index) => `
+                        <div class="accordion-item" style="animation-delay: ${index * 0.05}s;">
+                            <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
+                                <div>
+                                    <strong>${Security.escapeHtml(item.report_label || REPORT_LABELS[item.report_type])}</strong>
+                                    <div class="text-muted" style="font-size: 0.8125rem; margin-top: 0.25rem;">
+                                        ${Security.escapeHtml(item.filename)} • ${new Date(item.timestamp).toLocaleString('ru-RU')}
+                                    </div>
+                                </div>
+                                <div class="text-muted" style="font-size: 0.8125rem; margin-top: 0.25rem;">
+                                        Автор: ${Security.escapeHtml(item.created_by_email || '—')}
+                                        ${item.created_by ? `• ID: ${Security.escapeHtml(item.created_by)}` : ''}
+                                    </div>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span class="badge badge-info">${Security.escapeHtml(item.summary || '')}</span>
+                                    <span class="accordion-icon">▼</span>
                                 </div>
                             </div>
-                            <div class="history-actions">
-                                <button class="btn-icon" onclick="event.stopPropagation(); deleteReport('${report.id}')" title="Удалить">
-                                    🗑️
-                                </button>
+                            <div class="accordion-content">
+                                <div class="accordion-body" style="padding-top: 1rem;">
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-sm btn-secondary" onclick="viewReport('${item.id}')">
+                                            👁 Просмотр
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteReport('${item.id}')">
+                                            🗑 Удалить
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `).join('');
                 } else {
-                    historyList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>История пуста</p></div>';
+                    list.innerHTML = `
+                        <div class="card">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div class="empty-state-title">История пуста</div>
+                                <div class="empty-state-desc">Созданные отчеты появятся здесь</div>
+                            </div>
+                        </div>
+                    `;
                 }
             } catch (error) {
-                console.error('Error loading history:', error);
+                Toast.show('Ошибка загрузки истории', 'error');
             }
         }
 
-        async function viewReport(id) {
+        async function viewReport(reportId) {
+            Loading.show('Загрузка отчета...');
             try {
-                const response = await fetch(`${API_URL}/reports/${id}`);
+                const response = await fetchAPI(`/reports/${encodeURIComponent(reportId)}`);
                 const data = await response.json();
 
                 if (response.ok) {
-                    currentReport = data;
-                    displayResult(data);
+                    state.currentPage = 'reports';
+                    state.selectedReportType = data.report_type;
+                    render();
+                    setTimeout(() => renderReportResult(data), 100);
+                } else {
+                    Toast.show('Отчет не найден', 'error');
                 }
             } catch (error) {
-                showToast('Ошибка загрузки отчета', 'error');
+                Toast.show('Ошибка загрузки', 'error');
+            } finally {
+                Loading.hide();
             }
         }
 
-        async function deleteReport(id) {
+        async function deleteReport(reportId) {
             if (!confirm('Удалить этот отчет?')) return;
 
             try {
-                const response = await fetch(`${API_URL}/reports/${id}`, {
-                    method: 'DELETE'
+                const response = await fetchAPI(`/reports/${encodeURIComponent(reportId)}`, { method: 'DELETE' });
+                
+                if (response.ok) {
+                    Toast.show('Отчет удален', 'success');
+                    await loadHistory();
+                } else {
+                    Toast.show('Ошибка удаления', 'error');
+                }
+            } catch (error) {
+                Toast.show('Ошибка соединения', 'error');
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetchAPI('/users');
+                const data = await response.json();
+
+                const list = document.getElementById('users-list');
+                if (!list) return;
+
+                if (data.users && data.users.length > 0) {
+                    list.innerHTML = data.users.map((user, index) => {
+                        const initials = user.email.substring(0, 2).toUpperCase();
+                        const canDelete = state.currentUser.role === 'admin' || 
+                            (state.currentUser.role === 'moderator' && user.role !== 'admin');
+                        const isSelf = user.id === state.currentUser.id;
+
+                        return `
+                            <div class="user-item" style="animation-delay: ${index * 0.05}s;">
+                                <div class="user-info">
+                                    <div class="user-item-avatar">${Security.escapeHtml(initials)}</div>
+                                    <div class="user-details">
+                                        <div class="email">${Security.escapeHtml(user.email)}</div>
+                                        <div class="meta">
+                                            <span class="badge ${user.role === 'admin' ? 'badge-warning' : 'badge-info'}">
+                                                ${user.role === 'admin' ? '👑 Админ' : '👤 Модератор'}
+                                            </span>
+                                            ${user.is_superadmin ? '<span class="badge badge-danger ml-1">Super</span>' : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                ${!isSelf ? `
+                                <div class="user-actions">
+                                    ${state.currentUser.role === 'admin' && user.role === 'moderator' ? `
+                                        <button class="btn btn-sm btn-secondary" onclick="toggleDeletePermission('${user.id}', ${!user.can_delete_without_approval})">
+                                            ${user.can_delete_without_approval ? '🔒 Убрать права' : '🔓 Дать права'}
+                                        </button>
+                                    ` : ''}
+                                    ${canDelete && !user.is_superadmin ? `
+                                        <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')">
+                                            🗑 Удалить
+                                        </button>
+                                    ` : ''}
+                                </div>
+                                ` : '<span class="badge badge-success">Это вы</span>'}
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    list.innerHTML = `
+                        <div class="card">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">👥</div>
+                                <div class="empty-state-title">Нет пользователей</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                Toast.show('Ошибка загрузки пользователей', 'error');
+            }
+        }
+
+        function showCreateUserModal() {
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop';
+            backdrop.innerHTML = `
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Создать пользователя</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">✕</button>
+                    </div>
+                    <form id="create-user-form">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <label for="new-user-email"></label><input type="email" id="new-user-email" class="form-input" required placeholder="user@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Роль</label>
+                                <label for="new-user-role"></label><select id="new-user-role" class="form-input form-select">
+                                    <option value="moderator">Модератор</option>
+                                    ${state.currentUser.role === 'admin' ? '<option value="admin">Администратор</option>' : ''}
+                                </select>
+                            </div>
+                            ${state.currentUser.role === 'admin' ? `
+                            <label class="form-checkbox">
+                                <input type="checkbox" id="new-user-can-delete">
+                                <span>Может удалять без одобрения</span>
+                            </label>
+                            ` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">Отмена</button>
+                            <button type="submit" class="btn btn-success">Создать</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.body.appendChild(backdrop);
+
+            backdrop.querySelector('#create-user-form').addEventListener('submit', handleCreateUser);
+        }
+
+        async function handleCreateUser(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('new-user-email').value.trim();
+            const role = document.getElementById('new-user-role').value;
+            const canDelete = document.getElementById('new-user-can-delete')?.checked || false;
+
+            if (!Security.isValidEmail(email)) {
+                Toast.show('Введите корректный email', 'error');
+                return;
+            }
+
+            Loading.show('Создание пользователя...');
+
+            try {
+                const response = await fetchAPI('/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        role,
+                        can_delete_without_approval: canDelete
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.querySelector('.modal-backdrop').remove();
+                    await loadUsers();
+                    showPasswordModal(email, data.password);
+                } else {
+                    Toast.show(data.detail || 'Ошибка создания', 'error');
+                }
+            } catch (error) {
+                Toast.show('Ошибка соединения', 'error');
+            } finally {
+                Loading.hide();
+            }
+        }
+
+        function showPasswordModal(email, password) {
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop';
+            backdrop.innerHTML = `
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title">✅ Пользователь создан</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <label>
+                                <input type="text" class="form-input" value="${Security.escapeHtml(email)}" readonly>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Пароль</label>
+                            <label for="generated-password"></label><input type="text" class="form-input" value="${Security.escapeHtml(password)}" readonly id="generated-password">
+                        </div>
+                        <div class="badge badge-warning" style="display: block; padding: 0.75rem; text-align: center;">
+                            ⚠️ Сохраните пароль! Он больше не будет показан.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="navigator.clipboard.writeText('${Security.escapeHtml(password)}'); Toast.show('Пароль скопирован', 'success');">
+                            📋 Копировать пароль
+                        </button>
+                        <button class="btn btn-primary" onclick="this.closest('.modal-backdrop').remove()">Понятно</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(backdrop);
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Удалить этого пользователя?')) return;
+
+            try {
+                const response = await fetchAPI(`/users/${encodeURIComponent(userId)}`, { method: 'DELETE' });
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.requires_approval) {
+                        Toast.show('Запрос на удаление отправлен администратору', 'info');
+                    } else {
+                        Toast.show('Пользователь удален', 'success');
+                        await loadUsers();
+                    }
+                } else {
+                    Toast.show(data.detail || 'Ошибка удаления', 'error');
+                }
+            } catch (error) {
+                Toast.show('Ошибка соединения', 'error');
+            }
+        }
+
+        async function toggleDeletePermission(userId, canDelete) {
+            try {
+                const response = await fetchAPI(`/users/${encodeURIComponent(userId)}/delete-permission?can_delete_without_approval=${canDelete}`, {
+                    method: 'PATCH'
                 });
 
                 if (response.ok) {
-                    showToast('Отчет удален', 'success');
-                    loadHistory();
+                    Toast.show('Права обновлены', 'success');
+                    await loadUsers();
+                } else {
+                    Toast.show('Ошибка обновления прав', 'error');
                 }
             } catch (error) {
-                showToast('Ошибка удаления', 'error');
+                Toast.show('Ошибка соединения', 'error');
             }
         }
 
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <span>${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
-                <span>${message}</span>
-            `;
-            document.body.appendChild(toast);
+        async function loadDeleteRequests() {
+            try {
+                const response = await fetchAPI('/delete-requests');
+                const data = await response.json();
 
-            setTimeout(() => {
-                toast.style.animation = 'slideInRight 0.4s ease-out reverse';
-                setTimeout(() => toast.remove(), 400);
-            }, 3000);
+                const list = document.getElementById('requests-list');
+                if (!list) return;
+
+                if (data.requests && data.requests.length > 0) {
+                    list.innerHTML = data.requests.map((req, index) => `
+                        <div class="request-item" style="animation-delay: ${index * 0.05}s;">
+                            <div class="request-header">
+                                <div class="request-info">
+                                    <h4>Удаление: ${Security.escapeHtml(req.user?.email || 'Пользователь не найден')}</h4>
+                                    <p>Запросил: ${Security.escapeHtml(req.requester?.email || 'Неизвестно')}</p>
+                                    <p>${new Date(req.created_at).toLocaleString('ru-RU')}</p>
+                                </div>
+                                <div class="request-actions">
+                                    <button class="btn btn-sm btn-success" onclick="approveRequest('${req.id}')">
+                                        ✓ Одобрить
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="rejectRequest('${req.id}')">
+                                        ✕ Отклонить
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = `
+                        <div class="card">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div class="empty-state-title">Нет запросов</div>
+                                <div class="empty-state-desc">Запросы на удаление от модераторов появятся здесь</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                Toast.show('Ошибка загрузки запросов', 'error');
+            }
         }
 
-        function showLoading(show) {
-            const resultContent = document.getElementById('result-content');
-            if (show) {
-                resultContent.innerHTML = `
-                    <div class="empty-state">
-                        <div class="loading">
-                            <div class="spinner"></div>
-                            <span>Обработка файла...</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 70%"></div>
-                        </div>
-                    </div>
-                `;
+        async function approveRequest(requestId) {
+            if (!confirm('Одобрить удаление пользователя?')) return;
+
+            try {
+                const response = await fetchAPI(`/delete-requests/${encodeURIComponent(requestId)}/approve`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    Toast.show('Запрос одобрен, пользователь удален', 'success');
+                    await loadDeleteRequests();
+                } else {
+                    Toast.show('Ошибка одобрения', 'error');
+                }
+            } catch (error) {
+                Toast.show('Ошибка соединения', 'error');
             }
+        }
+
+        async function rejectRequest(requestId) {
+            if (!confirm('Отклонить запрос?')) return;
+
+            try {
+                const response = await fetchAPI(`/delete-requests/${encodeURIComponent(requestId)}/reject`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    Toast.show('Запрос отклонен', 'success');
+                    await loadDeleteRequests();
+                } else {
+                    Toast.show('Ошибка отклонения', 'error');
+                }
+            } catch (error) {
+                Toast.show('Ошибка соединения', 'error');
+            }
+        }
+
+        function toggleSidebar() {
+            state.sidebarOpen = !state.sidebarOpen;
+            document.querySelector('.sidebar')?.classList.toggle('open', state.sidebarOpen);
+            document.querySelector('.sidebar-overlay')?.classList.toggle('open', state.sidebarOpen);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadHistory();
+            setTheme(state.theme);
+            render();
         });
+
+        window.Toast = Toast;
+        window.toggleTheme = toggleTheme;
+        window.logout = logout;
+        window.toggleSidebar = toggleSidebar;
+        window.showCreateUserModal = showCreateUserModal;
+        window.deleteUser = deleteUser;
+        window.toggleDeletePermission = toggleDeletePermission;
+        window.viewReport = viewReport;
+        window.deleteReport = deleteReport;
+        window.approveRequest = approveRequest;
+        window.rejectRequest = rejectRequest;
     </script>
 </body>
 </html>
